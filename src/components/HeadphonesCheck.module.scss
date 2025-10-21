@@ -1,0 +1,319 @@
+// Импорт модуля для работы с цветами
+@use "sass:color";
+
+// Переменные
+$primary-color: #224F75;
+$background-card: #F4FAFF;
+$background-main: #ffffff;
+$text-color: #000000;
+$warning-bg: #FFF4E5;
+$warning-border: #FFD99C;
+$border-color: #e0e0e0;
+$border-radius: 25px;
+$input-border-radius: 30px;
+
+// Миксины для адаптива
+@mixin mobile {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+// Миксин для transitions
+@mixin smooth-transition($property: all) {
+  transition: $property 0.3s ease;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 100%;
+}
+
+.stepsIndicator {
+  display: flex;
+  gap: 0;
+  margin-bottom: 40px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  overflow: visible;
+
+  @include mobile {
+    margin-bottom: 24px;
+  }
+}
+
+.stepWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.step,
+.activeStep {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 400;
+  @include smooth-transition(all);
+  border: 1.5px solid #999;
+  background-color: white;
+  color: #999;
+  flex-shrink: 0;
+
+  @include mobile {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    border-width: 1px;
+  }
+}
+
+.activeStep {
+  border-color: $primary-color;
+  color: $primary-color;
+  font-weight: 600;
+}
+
+.stepLine {
+  width: 60px;
+  height: 1.3px;
+  background-color: #999;
+  margin: 0;
+  flex-shrink: 0;
+
+  @include mobile {
+    width: 24px;
+    height: 1px;
+  }
+}
+
+.formCard {
+  background-color: $background-card;
+  border-radius: $input-border-radius;
+  padding: 40px 60px 60px;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+
+  @include mobile {
+    padding: 24px 20px 30px;
+    border-radius: 20px;
+  }
+
+  @include tablet {
+    padding: 32px 40px 40px;
+  }
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: $text-color;
+  margin: 0 0 32px 0;
+  text-align: left;
+
+  @include mobile {
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+
+  @include tablet {
+    font-size: 28px;
+    margin-bottom: 28px;
+  }
+}
+
+.warningBox {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background-color: $warning-bg;
+  border: 1.5px solid $warning-border;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 40px;
+
+  @include mobile {
+    gap: 12px;
+    padding: 16px 18px;
+    margin-bottom: 32px;
+    border-radius: 12px;
+  }
+}
+
+.warningIcon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+
+  @include mobile {
+    font-size: 20px;
+  }
+}
+
+.warningText {
+  font-size: 16px;
+  color: $text-color;
+  line-height: 1.5;
+  margin: 0;
+
+  @include mobile {
+    font-size: 14px;
+  }
+}
+
+.checkButtons {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 40px;
+
+  @include mobile {
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  @include tablet {
+    gap: 16px;
+  }
+}
+
+.checkButton {
+  flex: 1;
+  position: relative;
+  background-color: white;
+  color: $primary-color;
+  border: 1.5px solid $primary-color;
+  border-radius: $input-border-radius;
+  padding: 18px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  @include smooth-transition(all);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover:not(.checked) {
+    background-color: rgba($primary-color, 0.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.checked {
+    background-color: $primary-color;
+    color: white;
+    border-color: $primary-color;
+  }
+
+  @include mobile {
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+}
+
+.checkmark {
+  font-size: 18px;
+  font-weight: 700;
+
+  @include mobile {
+    font-size: 16px;
+  }
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+
+  @include mobile {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}
+
+.backButton {
+  background-color: transparent;
+  color: $primary-color;
+  border: 1.5px solid $primary-color;
+  border-radius: $input-border-radius;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  width: auto;
+  min-width: 140px;
+  @include smooth-transition(all);
+
+  &:hover {
+    background-color: rgba($primary-color, 0.05);
+  }
+
+  @include mobile {
+    padding: 14px 28px;
+    font-size: 16px;
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+.submitButton {
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  border-radius: $input-border-radius;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  @include smooth-transition(all);
+  width: auto;
+  min-width: 180px;
+
+  &:hover:not(:disabled) {
+    background-color: color.adjust($primary-color, $lightness: -8%);
+  }
+
+  &:active:not(:disabled) {
+    background-color: color.adjust($primary-color, $lightness: -12%);
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    color: #888888;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  @include mobile {
+    padding: 14px 28px;
+    font-size: 16px;
+    width: 100%;
+    max-width: 200px;
+  }
+}
