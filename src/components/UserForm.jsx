@@ -1,35 +1,11 @@
 import { useState } from 'react';
 import styles from './UserForm.module.scss';
 
-const cities = [
-  'Алматы',
-  'Астана',
-  'Шымкент',
-  'Караганда',
-  'Актобе',
-  'Тараз',
-  'Павлодар',
-  'Усть-Каменогорск',
-  'Семей',
-  'Атырау',
-  'Костанай',
-  'Кызылорда',
-  'Уральск',
-  'Петропавловск',
-  'Актау',
-  'Темиртау',
-  'Туркестан',
-  'Кокшетау',
-  'Талдыкорган',
-  'Экибастуз'
-];
-
-const UserForm = ({ onNext, initialData }) => {
+const UserForm = ({ onNext, onBack, initialData }) => {
   const [formData, setFormData] = useState(initialData || {
     name: '',
     phone: '+7',
     email: '',
-    city: '',
     consent: false
   });
 
@@ -101,7 +77,7 @@ const UserForm = ({ onNext, initialData }) => {
     switch (fieldName) {
       case 'name':
         if (!value.trim()) {
-          error = 'Введите ваше имя';
+          error = 'Введите ваше ФИО';
         }
         break;
       case 'phone':
@@ -111,13 +87,10 @@ const UserForm = ({ onNext, initialData }) => {
         }
         break;
       case 'email':
-        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        if (!value.trim()) {
+          error = 'Введите email';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
           error = 'Некорректный email адрес';
-        }
-        break;
-      case 'city':
-        if (!value) {
-          error = 'Выберите город';
         }
         break;
       default:
@@ -137,7 +110,7 @@ const UserForm = ({ onNext, initialData }) => {
     let isValid = true;
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Введите ваше имя';
+      newErrors.name = 'Введите ваше ФИО';
       isValid = false;
     }
 
@@ -147,13 +120,11 @@ const UserForm = ({ onNext, initialData }) => {
       isValid = false;
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Некорректный email адрес';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Введите email';
       isValid = false;
-    }
-
-    if (!formData.city) {
-      newErrors.city = 'Выберите город';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Некорректный email адрес';
       isValid = false;
     }
 
@@ -174,7 +145,6 @@ const UserForm = ({ onNext, initialData }) => {
       name: true,
       phone: true,
       email: true,
-      city: true,
       consent: true
     });
 
@@ -183,7 +153,7 @@ const UserForm = ({ onNext, initialData }) => {
     }
   };
 
-  const steps = [1, 2, 3, 4, 5];
+  const steps = [1, 2, 3, 4, 5, 6];
   const currentStep = 1;
 
   // Проверка заполненности всех обязательных полей
@@ -192,7 +162,7 @@ const UserForm = ({ onNext, initialData }) => {
     return (
       formData.name.trim() !== '' &&
       phoneDigits.length === 11 &&
-      formData.city !== '' &&
+      formData.email.trim() !== '' &&
       formData.consent === true
     );
   };
@@ -214,89 +184,61 @@ const UserForm = ({ onNext, initialData }) => {
         <h1 className={styles.title}>Заполните форму</h1>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="name" className={styles.label}>
-                Ваше имя
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={`${styles.input} ${errors.name && touched.name ? styles.inputError : ''}`}
-                placeholder="Имя"
-              />
-              {errors.name && touched.name && (
-                <span className={styles.errorMessage}>{errors.name}</span>
-              )}
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="email" className={styles.label}>
-                Ваша почта
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={`${styles.input} ${errors.email && touched.email ? styles.inputError : ''}`}
-                placeholder="Email"
-              />
-              {errors.email && touched.email && (
-                <span className={styles.errorMessage}>{errors.email}</span>
-              )}
-            </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="name" className={styles.label}>
+              ФИО
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`${styles.input} ${errors.name && touched.name ? styles.inputError : ''}`}
+              placeholder="Введите ФИО"
+            />
+            {errors.name && touched.name && (
+              <span className={styles.errorMessage}>{errors.name}</span>
+            )}
           </div>
 
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="phone" className={styles.label}>
-                Номер телефона
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={`${styles.input} ${errors.phone && touched.phone ? styles.inputError : ''} ${formData.phone === '+7' ? styles.inputPlaceholder : ''}`}
-                placeholder="+7"
-              />
-              {errors.phone && touched.phone && (
-                <span className={styles.errorMessage}>{errors.phone}</span>
-              )}
-            </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="phone" className={styles.label}>
+              Номер телефона
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`${styles.input} ${errors.phone && touched.phone ? styles.inputError : ''} ${formData.phone === '+7' ? styles.inputPlaceholder : ''}`}
+              placeholder="+7"
+            />
+            {errors.phone && touched.phone && (
+              <span className={styles.errorMessage}>{errors.phone}</span>
+            )}
+          </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="city" className={styles.label}>
-                Ваш город
-              </label>
-              <select
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={`${styles.select} ${errors.city && touched.city ? styles.inputError : ''} ${!formData.city ? styles.selectPlaceholder : ''}`}
-              >
-                <option value="" disabled>Выберите город</option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-              {errors.city && touched.city && (
-                <span className={styles.errorMessage}>{errors.city}</span>
-              )}
-            </div>
+          <div className={styles.formGroup}>
+            <label htmlFor="email" className={styles.label}>
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className={`${styles.input} ${errors.email && touched.email ? styles.inputError : ''}`}
+              placeholder="Введите email"
+            />
+            {errors.email && touched.email && (
+              <span className={styles.errorMessage}>{errors.email}</span>
+            )}
           </div>
 
           <div className={styles.checkboxGroup}>
@@ -318,7 +260,7 @@ const UserForm = ({ onNext, initialData }) => {
           </div>
 
           <div className={styles.buttonGroup}>
-          <button type="button" className={styles.backButton}>
+            <button type="button" className={styles.backButton} onClick={onBack}>
               Назад
             </button>
             <button
@@ -328,7 +270,6 @@ const UserForm = ({ onNext, initialData }) => {
             >
               Продолжить
             </button>
-            
           </div>
         </form>
       </div>

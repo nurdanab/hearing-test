@@ -25,7 +25,19 @@ const HearingTest = ({ onNext, onBack }) => {
 
   // Инициализация Audio Context
   useEffect(() => {
-    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    // Проверка поддержки Web Audio API
+    if (!window.AudioContext && !window.webkitAudioContext) {
+      console.error('Web Audio API не поддерживается в этом браузере');
+      alert('Ваш браузер не поддерживает Web Audio API. Пожалуйста, используйте современный браузер (Chrome, Firefox, Safari, Edge).');
+      return;
+    }
+
+    try {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (error) {
+      console.error('Ошибка инициализации Audio Context:', error);
+      alert('Не удалось инициализировать аудио систему. Попробуйте обновить страницу.');
+    }
 
     return () => {
       if (audioContextRef.current) {
@@ -45,11 +57,14 @@ const HearingTest = ({ onNext, onBack }) => {
 
   // Преобразование dB в gain
   const dbToGain = (db) => {
-    // Нормализуем диапазон [-10, 120] в [0, 1]
-    // -10 dB -> очень тихо (gain = 0.01)
+    // Калибровка для работы при системной громкости 70%
+    // Увеличиваем диапазон gain, чтобы компенсировать 70% громкости
+    // -10 dB -> очень тихо (gain = 0.02)
     // 120 dB -> максимум (gain = 1)
     const normalized = (db + 10) / 130; // Приводим к диапазону [0, 1]
-    return Math.max(0.01, Math.min(1, normalized));
+    // Компенсируем 70% системной громкости, увеличивая gain на ~43% (1/0.7 ≈ 1.43)
+    const compensated = normalized * 1.43;
+    return Math.max(0.02, Math.min(1, compensated));
   };
 
   // Воспроизведение звука
@@ -72,8 +87,18 @@ const HearingTest = ({ onNext, onBack }) => {
     gainNode.gain.setValueAtTime(gain, audioContext.currentTime);
 
     // Создаём panner для выбора уха
-    const panner = audioContext.createStereoPanner();
-    panner.pan.setValueAtTime(currentEar === 'left' ? -1 : 1, audioContext.currentTime);
+    // StereoPanner поддерживается в большинстве современных браузеров
+    // Для старых браузеров используем PannerNode как фоллбэк
+    let panner;
+    if (audioContext.createStereoPanner) {
+      panner = audioContext.createStereoPanner();
+      panner.pan.setValueAtTime(currentEar === 'left' ? -1 : 1, audioContext.currentTime);
+    } else {
+      // Фоллбэк для старых браузеров
+      panner = audioContext.createPanner();
+      panner.panningModel = 'equalpower';
+      panner.setPosition(currentEar === 'left' ? -1 : 1, 0, 0);
+    }
 
     // Соединяем узлы
     oscillator.connect(gainNode);
@@ -185,8 +210,8 @@ const HearingTest = ({ onNext, onBack }) => {
     }
   };
 
-  const steps = [1, 2, 3, 4, 5];
-  const currentStep = 4;
+  const steps = [1, 2, 3, 4, 5, 6];
+  const currentStep = 5;
 
   const isTestComplete = completedTests >= totalTests;
 
@@ -225,13 +250,21 @@ const HearingTest = ({ onNext, onBack }) => {
               </div>
             </div>
 
-            <div className={styles.warningBox}>
-              {/* <span className={styles.warningIcon}>🎧</span> */}
-              <p className={styles.warningText}>
-                {/* Сейчас проверяется <strong>{currentEar === 'left' ? 'левое' : 'правое'}</strong> ухо.
-                <br /> */}
+            <div className={styles.instructionBox}>
+              <p className={styles.instructionText}>
                 Нажмите "Слышу", когда услышите звук, или "Не слышу", чтобы увеличить громкость.
               </p>
+            </div>
+
+            <div className={styles.playButtonContainer}>
+              <button
+                type="button"
+                className={styles.playButton}
+                onClick={playSound}
+                disabled={isPlaying}
+              >
+                {isPlaying ? 'Воспроизводится...' : 'Повторить звук'}
+              </button>
             </div>
 
             <div className={styles.testButtons}>

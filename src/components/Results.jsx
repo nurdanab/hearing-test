@@ -1,240 +1,35 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import styles from './Results.module.scss';
+import { drawUserResults, drawNormalResults } from './audiogramHelpers';
+import { generatePDF } from '../utils/pdfGenerator';
 
-const Results = ({ testResults, onBack, onFinish }) => {
-  const canvasRef = useRef(null);
+const Results = ({ testResults, onBack, onFinish, userData }) => {
+  const userCanvasRef = useRef(null);
+  const normalCanvasRef = useRef(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
-  const FREQUENCIES = [250, 500, 1000, 1500, 2000, 8000];
-  const DB_LEVELS = [-10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120];
-
-  // Уровни для отображения на графике (каждые 10 дБ для читаемости)
-  const DISPLAY_DB_LEVELS = [-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120];
-
-  const drawAudiogram = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Очистка canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Параметры графика
-    const padding = { top: 40, right: 40, bottom: 60, left: 60 };
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
-
-    // Фон графика
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(padding.left, padding.top, chartWidth, chartHeight);
-
-    // Сетка - рисуем линии только для DISPLAY_DB_LEVELS (каждые 10 дБ)
-    DISPLAY_DB_LEVELS.forEach((db) => {
-      const dbIndex = DB_LEVELS.indexOf(db);
-      const y = padding.top + (chartHeight / (DB_LEVELS.length - 1)) * dbIndex;
-
-      // Основные линии (каждые 10 дБ) - более заметные
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(padding.left, y);
-      ctx.lineTo(padding.left + chartWidth, y);
-      ctx.stroke();
-
-      // Подписи уровней dB (слева)
-      ctx.fillStyle = '#666';
-      ctx.font = '13px Arial';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(db + ' дБ', padding.left - 10, y);
-    });
-
-    // Промежуточные линии (каждые 5 дБ) - тонкие, пунктирные
-    DB_LEVELS.forEach((db, index) => {
-      if (!DISPLAY_DB_LEVELS.includes(db)) {
-        const y = padding.top + (chartHeight / (DB_LEVELS.length - 1)) * index;
-
-        ctx.strokeStyle = '#f0f0f0';
-        ctx.lineWidth = 0.5;
-        ctx.setLineDash([3, 3]); // Пунктир
-        ctx.beginPath();
-        ctx.moveTo(padding.left, y);
-        ctx.lineTo(padding.left + chartWidth, y);
-        ctx.stroke();
-        ctx.setLineDash([]); // Сброс пунктира
-      }
-    });
-
-    // Вертикальные линии (частоты)
-    FREQUENCIES.forEach((freq, index) => {
-      const x = padding.left + (chartWidth / (FREQUENCIES.length - 1)) * index;
-
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(x, padding.top);
-      ctx.lineTo(x, padding.top + chartHeight);
-      ctx.stroke();
-
-      // Подписи частот (снизу)
-      ctx.fillStyle = '#666';
-      ctx.font = '13px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillText(freq + ' Гц', x, padding.top + chartHeight + 10);
-    });
-
-    // Рамка графика
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(padding.left, padding.top, chartWidth, chartHeight);
-
-    // Зона нормального слуха (до 25 дБ) - зелёная заливка
-    const normalThresholdIndex = DB_LEVELS.indexOf(25);
-    if (normalThresholdIndex !== -1) {
-      const normalThresholdY = padding.top + (chartHeight / (DB_LEVELS.length - 1)) * normalThresholdIndex;
-      ctx.fillStyle = 'rgba(76, 175, 80, 0.08)'; // Светло-зелёный с прозрачностью
-      ctx.fillRect(padding.left, padding.top, chartWidth, normalThresholdY - padding.top);
-
-      // Линия границы нормы (25 дБ)
-      ctx.strokeStyle = 'rgba(76, 175, 80, 0.4)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(padding.left, normalThresholdY);
-      ctx.lineTo(padding.left + chartWidth, normalThresholdY);
-      ctx.stroke();
-      ctx.setLineDash([]);
+  // Рисуем графики при монтировании и изменении данных
+  useEffect(() => {
+    if (userCanvasRef.current) {
+      drawUserResults(userCanvasRef.current, testResults);
     }
-
-    // Функция для получения координат точки
-    const getPointCoordinates = (freqIndex, dbValue) => {
-      const x = padding.left + (chartWidth / (FREQUENCIES.length - 1)) * freqIndex;
-      const dbIndex = DB_LEVELS.indexOf(dbValue);
-      const y = padding.top + (chartHeight / (DB_LEVELS.length - 1)) * dbIndex;
-      return { x, y };
-    };
-
-    // Рисование данных для левого уха (синяя линия с крестиками)
-    if (testResults?.left) {
-      ctx.strokeStyle = '#2196F3';
-      ctx.fillStyle = '#2196F3';
-      ctx.lineWidth = 2;
-
-      const leftPoints = FREQUENCIES.map((freq, index) => {
-        const dbValue = testResults.left[freq];
-        if (dbValue !== undefined) {
-          return getPointCoordinates(index, dbValue);
-        }
-        return null;
-      }).filter(p => p !== null);
-
-      // Линия
-      if (leftPoints.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(leftPoints[0].x, leftPoints[0].y);
-        for (let i = 1; i < leftPoints.length; i++) {
-          ctx.lineTo(leftPoints[i].x, leftPoints[i].y);
-        }
-        ctx.stroke();
-      }
-
-      // Крестики
-      leftPoints.forEach(point => {
-        const size = 10;
-        ctx.strokeStyle = '#2196F3';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(point.x - size, point.y - size);
-        ctx.lineTo(point.x + size, point.y + size);
-        ctx.moveTo(point.x + size, point.y - size);
-        ctx.lineTo(point.x - size, point.y + size);
-        ctx.stroke();
-      });
-    }
-
-    // Рисование данных для правого уха (красная линия с кружками)
-    if (testResults?.right) {
-      ctx.strokeStyle = '#F44336';
-      ctx.fillStyle = '#F44336';
-      ctx.lineWidth = 2;
-
-      const rightPoints = FREQUENCIES.map((freq, index) => {
-        const dbValue = testResults.right[freq];
-        if (dbValue !== undefined) {
-          return getPointCoordinates(index, dbValue);
-        }
-        return null;
-      }).filter(p => p !== null);
-
-      // Линия
-      if (rightPoints.length > 1) {
-        ctx.beginPath();
-        ctx.moveTo(rightPoints[0].x, rightPoints[0].y);
-        for (let i = 1; i < rightPoints.length; i++) {
-          ctx.lineTo(rightPoints[i].x, rightPoints[i].y);
-        }
-        ctx.stroke();
-      }
-
-      // Кружки
-      rightPoints.forEach(point => {
-        ctx.strokeStyle = '#F44336';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, 8, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-      });
-    }
-
-    // Легенда
-    const legendY = padding.top - 20;
-
-    // Левое ухо
-    ctx.strokeStyle = '#2196F3';
-    ctx.lineWidth = 2;
-    const leftLegendX = padding.left + 20;
-    ctx.beginPath();
-    ctx.moveTo(leftLegendX - 8, legendY - 8);
-    ctx.lineTo(leftLegendX + 8, legendY + 8);
-    ctx.moveTo(leftLegendX + 8, legendY - 8);
-    ctx.lineTo(leftLegendX - 8, legendY + 8);
-    ctx.stroke();
-
-    ctx.fillStyle = '#2196F3';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Левое ухо', leftLegendX + 15, legendY);
-
-    // Правое ухо
-    ctx.strokeStyle = '#F44336';
-    const rightLegendX = padding.left + 120;
-    ctx.beginPath();
-    ctx.arc(rightLegendX, legendY, 6, 0, 2 * Math.PI);
-    ctx.stroke();
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-
-    ctx.fillStyle = '#F44336';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Правое ухо', rightLegendX + 15, legendY);
-  }, [testResults, FREQUENCIES, DB_LEVELS]);
+  }, [testResults]);
 
   useEffect(() => {
-    drawAudiogram();
-  }, [drawAudiogram]);
+    if (normalCanvasRef.current) {
+      drawNormalResults(normalCanvasRef.current);
+    }
+  }, []);
 
   // Интерпретация результатов
   const getHearingInterpretation = () => {
     if (!testResults?.left || !testResults?.right) {
-      return { level: 'unknown', text: 'Недостаточно данных для анализа', color: '#999999' };
+      return {
+        level: 'unknown',
+        text: 'Недостаточно данных для анализа',
+        description: 'Не удалось получить достаточно данных для определения состояния слуха.',
+        color: '#999999'
+      };
     }
 
     // Вычисляем средний порог слышимости
@@ -243,53 +38,110 @@ const Results = ({ testResults, onBack, onFinish }) => {
     const allValues = [...leftValues, ...rightValues];
 
     if (allValues.length === 0) {
-      return { level: 'unknown', text: 'Недостаточно данных для анализа', color: '#999999' };
+      return {
+        level: 'unknown',
+        text: 'Недостаточно данных для анализа',
+        description: 'Не удалось получить достаточно данных для определения состояния слуха.',
+        color: '#999999'
+      };
     }
 
     const avgDb = allValues.reduce((sum, val) => sum + val, 0) / allValues.length;
+    const avgLeftDb = leftValues.reduce((sum, val) => sum + val, 0) / leftValues.length;
+    const avgRightDb = rightValues.reduce((sum, val) => sum + val, 0) / rightValues.length;
 
     if (avgDb <= 25) {
       return {
         level: 'normal',
         text: 'Нормальный слух',
-        color: '#4CAF50'
+        description: `Ваш слух находится в пределах нормы. Средний порог слышимости составляет ${Math.round(avgDb)} дБ, что соответствует нормальному восприятию звуков. Вы можете слышать тихую речь и различать звуки в обычных условиях без затруднений.`,
+        color: '#4CAF50',
+        hearingAid: null,
+        hearingAidTitle: 'Слуховой аппарат не требуется',
+        hearingAidDescription: 'При нормальном слухе использование слухового аппарата не требуется. Рекомендуется регулярная проверка слуха для профилактики.'
       };
     } else if (avgDb <= 40) {
       return {
         level: 'mild',
-        text: 'Легкая потеря слуха',
-        color: '#FFC107'
+        text: 'Лёгкая потеря слуха',
+        description: `Обнаружена лёгкая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Вы можете испытывать трудности при восприятии тихой речи или звуков на расстоянии, особенно в шумной обстановке. Рекомендуется консультация специалиста для оценки необходимости коррекции слуха.`,
+        color: '#FFC107',
+        hearingAid: '/images/hearing-aids/image1.png',
+        hearingAidTitle: 'Внутриканальные аппараты (ITC/CIC)',
+        hearingAidDescription: 'Компактные устройства, размещаемые внутри слухового канала. Практически незаметны, идеально подходят для лёгкой степени потери слуха. Обеспечивают естественное звучание и комфорт при повседневном использовании.'
       };
     } else if (avgDb <= 55) {
       return {
         level: 'moderate',
         text: 'Умеренная потеря слуха',
-        color: '#FF9800'
+        description: `Обнаружена умеренная потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Вы испытываете значительные трудности в восприятии обычной речи без усиления звука. Затруднено общение в группе людей и при фоновом шуме. Настоятельно рекомендуется обращение к врачу-сурдологу для подбора слухового аппарата.`,
+        color: '#FF9800',
+        hearingAid: '/images/hearing-aids/image2.png',
+        hearingAidTitle: 'Заушные аппараты с выносным ресивером (RIC)',
+        hearingAidDescription: 'Современные заушные аппараты с динамиком в ушном канале. Обеспечивают отличное качество звука, комфортны в ношении. Подходят для умеренной потери слуха, имеют широкие возможности настройки и подавления шума.'
       };
     } else if (avgDb <= 70) {
       return {
         level: 'moderately-severe',
-        text: 'Умеренно-тяжелая потеря слуха',
-        color: '#FF5722'
+        text: 'Умеренно-тяжёлая потеря слуха',
+        description: `Обнаружена умеренно-тяжёлая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Восприятие речи значительно затруднено даже при громком разговоре. Необходимо использование слухового аппарата. Обязательно обратитесь к врачу-сурдологу для комплексного обследования и подбора средств реабилитации.`,
+        color: '#FF5722',
+        hearingAid: '/images/hearing-aids/image3.png',
+        hearingAidTitle: 'Мощные заушные аппараты (BTE)',
+        hearingAidDescription: 'Классические заушные аппараты повышенной мощности. Надежны, долговечны и обеспечивают мощное усиление звука. Подходят для умеренно-тяжёлой потери слуха, оснащены продвинутыми функциями шумоподавления и направленными микрофонами.'
       };
     } else if (avgDb <= 90) {
       return {
         level: 'severe',
-        text: 'Тяжелая потеря слуха',
-        color: '#F44336'
+        text: 'Тяжёлая потеря слуха',
+        description: `Обнаружена тяжёлая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Восприятие речи без слухового аппарата практически невозможно. Слышны только очень громкие звуки. Требуется срочная консультация врача-сурдолога и использование мощного слухового аппарата или рассмотрение вопроса о кохлеарной имплантации.`,
+        color: '#F44336',
+        hearingAid: '/images/hearing-aids/image3.png',
+        hearingAidTitle: 'Сверхмощные заушные аппараты (Power BTE)',
+        hearingAidDescription: 'Сверхмощные слуховые аппараты для тяжёлой потери слуха. Обеспечивают максимальное усиление и отличную разборчивость речи. Оснащены влагозащитой, прочным корпусом и продвинутыми технологиями обработки звука для сложных акустических условий.'
       };
     } else {
       return {
         level: 'profound',
         text: 'Глубокая потеря слуха',
-        color: '#D32F2F'
+        description: `Обнаружена глубокая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Восприятие звуков крайне ограничено или отсутствует. Необходима срочная консультация врача-сурдолога для рассмотрения возможности кохлеарной имплантации или использования других высокотехнологичных средств реабилитации.`,
+        color: '#D32F2F',
+        hearingAid: '/images/hearing-aids/image2.png',
+        hearingAidTitle: 'Кохлеарный имплант',
+        hearingAidDescription: 'Высокотехнологичное устройство, которое обходит поврежденные части уха и напрямую стимулирует слуховой нерв. Подходит для глубокой потери слуха, когда традиционные слуховые аппараты неэффективны. Требует хирургической установки и последующей настройки специалистом.'
       };
     }
   };
 
   const interpretation = getHearingInterpretation();
-  const steps = [1, 2, 3, 4, 5];
-  const currentStep = 5;
+  const steps = [1, 2, 3, 4, 5, 6];
+  const currentStep = 6;
+
+  // Функция для скачивания PDF
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const result = await generatePDF(
+        userData,
+        testResults,
+        interpretation,
+        userCanvasRef.current,
+        normalCanvasRef.current
+      );
+
+      if (result.success) {
+        console.log('PDF успешно сгенерирован:', result.fileName);
+      } else {
+        console.error('Ошибка генерации PDF:', result.error);
+        alert('Произошла ошибка при генерации PDF. Попробуйте еще раз.');
+      }
+    } catch (error) {
+      console.error('Ошибка:', error);
+      alert('Произошла ошибка при генерации PDF. Попробуйте еще раз.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -307,25 +159,67 @@ const Results = ({ testResults, onBack, onFinish }) => {
 
         <h1 className={styles.title}>Результаты теста</h1>
 
-        <div className={styles.interpretationBox} style={{ borderColor: interpretation.color }}>
-          {/* <div className={styles.interpretationIcon} style={{ color: interpretation.color }}>
-            📊
-          </div> */}
-          <div>
-            <h3 className={styles.interpretationTitle}>Ваш результат</h3>
-            <p className={styles.interpretationText} style={{ color: interpretation.color }}>
-              {interpretation.text}
-            </p>
+        <div className={styles.resultInline}>
+          <svg
+            className={styles.resultIcon}
+            style={{ color: interpretation.color }}
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="50" cy="50" r="45" stroke="currentColor" strokeWidth="4" fill="none"/>
+            <path d="M 30 50 L 45 65 L 70 35" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className={styles.resultText}>Ваш результат - {interpretation.text}</span>
+        </div>
+
+        <div className={styles.chartsContainer}>
+          <div className={styles.chartBlock}>
+            <h3 className={styles.chartTitle}>Ваши результаты</h3>
+            <canvas
+              ref={userCanvasRef}
+              width={800}
+              height={500}
+              className={styles.audiogramCanvas}
+            />
+          </div>
+          <div className={styles.chartBlock}>
+            <h3 className={styles.chartTitle}>Норма</h3>
+            <canvas
+              ref={normalCanvasRef}
+              width={800}
+              height={500}
+              className={styles.audiogramCanvas}
+            />
           </div>
         </div>
 
-        <div className={styles.canvasWrapper}>
-          <canvas
-            ref={canvasRef}
-            width={800}
-            height={500}
-            className={styles.audiogramCanvas}
-          />
+        <div className={styles.descriptionBox}>
+          <h3 className={styles.descriptionTitle}>Описание результата</h3>
+          <p className={styles.descriptionText}>
+            {interpretation.description}
+          </p>
+        </div>
+
+        <div className={styles.hearingAidBox}>
+          <h3 className={styles.hearingAidBoxTitle}>Рекомендация по слуховому аппарату</h3>
+          <div className={styles.hearingAidContent}>
+            {interpretation.hearingAid && (
+              <div className={styles.hearingAidImageWrapper}>
+                <img
+                  src={interpretation.hearingAid}
+                  alt={interpretation.hearingAidTitle}
+                  className={styles.hearingAidImage}
+                />
+              </div>
+            )}
+            <div className={styles.hearingAidInfo}>
+              <h4 className={styles.hearingAidTitle}>{interpretation.hearingAidTitle}</h4>
+              <p className={styles.hearingAidDescription}>
+                {interpretation.hearingAidDescription}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className={styles.infoBox}>
@@ -339,17 +233,18 @@ const Results = ({ testResults, onBack, onFinish }) => {
         <div className={styles.buttonGroup}>
           <button
             type="button"
-            className={styles.backButton}
-            onClick={onBack}
+            className={styles.downloadButton}
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
           >
-            Назад
+            {isGeneratingPDF ? 'Генерация PDF...' : 'Скачать результаты в PDF'}
           </button>
           <button
             type="button"
             className={styles.submitButton}
             onClick={onFinish}
           >
-            Завершить
+            Пройти повторно
           </button>
         </div>
       </div>

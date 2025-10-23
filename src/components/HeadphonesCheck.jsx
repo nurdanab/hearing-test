@@ -1,16 +1,44 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './HeadphonesCheck.module.scss';
 
 const HeadphonesCheck = ({ onNext, onBack }) => {
   const [checkedLeft, setCheckedLeft] = useState(false);
   const [checkedRight, setCheckedRight] = useState(false);
+  const [audioError, setAudioError] = useState(false);
   const audioLeftRef = useRef(null);
   const audioRightRef = useRef(null);
+
+  useEffect(() => {
+    // Обработчик ошибок загрузки аудио
+    const handleAudioError = (e) => {
+      console.error('Ошибка загрузки аудио:', e);
+      setAudioError(true);
+    };
+
+    if (audioLeftRef.current) {
+      audioLeftRef.current.addEventListener('error', handleAudioError);
+    }
+    if (audioRightRef.current) {
+      audioRightRef.current.addEventListener('error', handleAudioError);
+    }
+
+    return () => {
+      if (audioLeftRef.current) {
+        audioLeftRef.current.removeEventListener('error', handleAudioError);
+      }
+      if (audioRightRef.current) {
+        audioRightRef.current.removeEventListener('error', handleAudioError);
+      }
+    };
+  }, []);
 
   const handlePlayLeft = () => {
     if (audioLeftRef.current) {
       audioLeftRef.current.currentTime = 0;
-      audioLeftRef.current.play();
+      audioLeftRef.current.play().catch(error => {
+        console.error('Ошибка воспроизведения аудио:', error);
+        alert('Не удалось воспроизвести звук. Проверьте, что аудио файлы доступны.');
+      });
       setCheckedLeft(true);
     }
   };
@@ -18,13 +46,16 @@ const HeadphonesCheck = ({ onNext, onBack }) => {
   const handlePlayRight = () => {
     if (audioRightRef.current) {
       audioRightRef.current.currentTime = 0;
-      audioRightRef.current.play();
+      audioRightRef.current.play().catch(error => {
+        console.error('Ошибка воспроизведения аудио:', error);
+        alert('Не удалось воспроизвести звук. Проверьте, что аудио файлы доступны.');
+      });
       setCheckedRight(true);
     }
   };
 
-  const steps = [1, 2, 3, 4, 5];
-  const currentStep = 3;
+  const steps = [1, 2, 3, 4, 5, 6];
+  const currentStep = 4;
 
   const canProceed = checkedLeft && checkedRight;
 
@@ -44,11 +75,11 @@ const HeadphonesCheck = ({ onNext, onBack }) => {
 
         <h1 className={styles.title}>Проверка наушников</h1>
 
-        <div className={styles.warningBox}>
-          <span className={styles.warningIcon}>⚠</span>
-          <p className={styles.warningText}>
-            Наденьте наушники и установите громкость на комфортный максимум.
-            <br />
+        <div className={styles.infoBox}>
+          <p className={styles.infoText}>
+            Наденьте наушники и установите громкость устройства на 70%.
+          </p>
+          <p className={styles.infoText}>
             Нажмите на кнопки, чтобы проверить левый и правый канал.
           </p>
         </div>
