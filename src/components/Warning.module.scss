@@ -127,19 +127,21 @@ $input-border-radius: 30px;
 }
 
 .title {
-  font-size: 32px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 56px;
   font-weight: 700;
   color: $text-color;
   margin: 0 0 40px 0;
   text-align: left;
+  line-height: 1.2;
 
   @include mobile {
-    font-size: 22px;
+    font-size: 32px;
     margin-bottom: 24px;
   }
 
   @include tablet {
-    font-size: 28px;
+    font-size: 44px;
     margin-bottom: 32px;
   }
 }
@@ -159,7 +161,7 @@ $input-border-radius: 30px;
 }
 
 .warningText {
-  font-size: 15px;
+  font-size: 18px;
   color: $text-color;
   line-height: 1.6;
   margin: 0 0 12px 0;
@@ -169,8 +171,8 @@ $input-border-radius: 30px;
   }
 
   @include mobile {
-    font-size: 13px;
-    line-height: 1.5;
+    font-size: 16px;
+    line-height: 1.6;
   }
 }
 
@@ -193,7 +195,7 @@ $input-border-radius: 30px;
   border: 1.5px solid $primary-color;
   border-radius: $input-border-radius;
   padding: 14px 32px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   cursor: pointer;
   width: auto;
@@ -218,7 +220,7 @@ $input-border-radius: 30px;
   border: none;
   border-radius: $input-border-radius;
   padding: 14px 32px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   cursor: pointer;
   @include smooth-transition(all);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Welcome from './components/Welcome';
 import UserForm from './components/UserForm';
 import MiniSurvey from './components/MiniSurvey';
@@ -6,6 +6,12 @@ import Warning from './components/Warning';
 import HeadphonesCheck from './components/HeadphonesCheck';
 import HearingTest from './components/HearingTest';
 import Results from './components/Results';
+import {
+  sendHeightToParent,
+  scrollParentToTop,
+  observeContentChanges,
+  sendReadyMessage
+} from './utils/iframeHelper';
 import './App.css';
 
 function App() {
@@ -13,6 +19,45 @@ function App() {
   const [userData, setUserData] = useState(null);
   const [surveyData, setSurveyData] = useState(null);
   const [testResults, setTestResults] = useState(null);
+
+  // Эффект для работы с iframe - отправка высоты и прокрутка
+  useEffect(() => {
+    // Отправляем сообщение о готовности при первой загрузке
+    sendReadyMessage();
+
+    // Начальная отправка высоты
+    sendHeightToParent();
+
+    // Настраиваем наблюдение за изменениями контента
+    const cleanup = observeContentChanges(() => {
+      sendHeightToParent();
+    });
+
+    // Дополнительная отправка высоты через небольшую задержку
+    // (для случаев, когда контент загружается асинхронно)
+    const timer = setTimeout(() => {
+      sendHeightToParent();
+    }, 500);
+
+    return () => {
+      if (cleanup) cleanup();
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Эффект для прокрутки и обновления высоты при смене шага
+  useEffect(() => {
+    // Прокручиваем родительскую страницу вверх
+    scrollParentToTop();
+
+    // Отправляем обновленную высоту
+    // Небольшая задержка для завершения рендеринга
+    const timer = setTimeout(() => {
+      sendHeightToParent();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [currentStep]);
 
   const handleWelcomeNext = () => {
     console.log('Начало теста');
