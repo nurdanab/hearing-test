@@ -31,12 +31,24 @@ export async function sendTestResults({
   pdfBase64,
   pdfFilename = 'hearing-test-results.pdf'
 }) {
+  console.log('=== sendTestResults called ===');
+  console.log('Environment variables check:', {
+    hasHost: !!process.env.SMTP_HOST,
+    hasUser: !!process.env.SMTP_USER,
+    hasPass: !!process.env.SMTP_PASS,
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_SECURE
+  });
+
   // Проверка настроек SMTP
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error('SMTP settings missing!');
     throw new Error('SMTP settings not configured. Please check your environment variables.');
   }
 
   try {
+    console.log('Creating email transporter...');
     const transporter = createTransporter();
 
     // HTML шаблон письма
@@ -116,12 +128,16 @@ export async function sendTestResults({
       });
     }
 
-    console.log('Sending email to:', to);
+    console.log('Preparing to send email to:', to);
+    console.log('Email size:', JSON.stringify(mailOptions).length, 'bytes');
 
     // Отправка письма
+    console.log('Calling sendMail...');
     const info = await transporter.sendMail(mailOptions);
 
-    console.log('Email sent successfully:', info.messageId);
+    console.log('Email sent successfully!');
+    console.log('Message ID:', info.messageId);
+    console.log('Response:', info.response);
 
     return {
       success: true,
