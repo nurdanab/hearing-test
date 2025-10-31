@@ -62,12 +62,10 @@ function App() {
   }, [currentStep]);
 
   const handleWelcomeNext = () => {
-    console.log('Начало теста');
     setCurrentStep(1); // Переход к форме
   };
 
   const handleUserFormSubmit = async (formData) => {
-    console.log('Данные формы:', formData);
     setUserData(formData);
 
     // Отправляем данные в CRM
@@ -79,14 +77,12 @@ function App() {
 
     if (leadId) {
       setCrmLeadId(leadId);
-      console.log('Лид создан в CRM с ID:', leadId);
     }
 
     setCurrentStep(2); // Переход к следующему шагу
   };
 
   const handleSurveySubmit = (answers) => {
-    console.log('Ответы опроса:', answers);
     setSurveyData(answers);
     setCurrentStep(3); // Переход к предупреждению
   };
@@ -100,7 +96,6 @@ function App() {
   };
 
   const handleWarningNext = () => {
-    console.log('Переход к проверке наушников');
     setCurrentStep(4); // Переход к проверке наушников
   };
 
@@ -109,7 +104,6 @@ function App() {
   };
 
   const handleHeadphonesCheckNext = () => {
-    console.log('Проверка наушников завершена');
     setCurrentStep(5); // Переход к тесту на слух
   };
 
@@ -118,7 +112,6 @@ function App() {
   };
 
   const handleHearingTestNext = (results) => {
-    console.log('Результаты теста на слух:', results);
     setTestResults(results);
     setCurrentStep(6); // Переход к результатам
   };
@@ -132,13 +125,6 @@ function App() {
   };
 
   const handleFinish = () => {
-    console.log('Тест завершён');
-    console.log('Все данные:', {
-      userData,
-      surveyData,
-      testResults,
-      crmLeadId
-    });
     // Сброс всех данных и возврат на приветственную страницу
     setUserData(null);
     setSurveyData(null);

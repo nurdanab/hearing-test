@@ -9,7 +9,6 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
   const userCanvasRef = useRef(null);
   const normalCanvasRef = useRef(null);
 
-  // Рисуем графики при монтировании и изменении данных
   useEffect(() => {
     if (userCanvasRef.current) {
       drawUserResults(userCanvasRef.current, testResults);
@@ -29,31 +28,18 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
       submitTestResultsToCRM(crmLeadId, testResults, interpretation);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Выполняется только при монтировании
+  }, []); 
 
-  // Автоматически отправляем результаты на email после отрисовки графиков
   useEffect(() => {
     let emailSent = false;
 
     const sendEmailAutomatically = async () => {
-      console.log('=== sendEmailAutomatically called ===');
-      console.log('Checking conditions:', {
-        hasUserCanvas: !!userCanvasRef.current,
-        hasNormalCanvas: !!normalCanvasRef.current,
-        hasEmail: !!userData?.email,
-        email: userData?.email,
-        emailSent
-      });
-
-      // Проверяем что графики отрисованы и email еще не отправлен
       if (userCanvasRef.current && normalCanvasRef.current && userData?.email && !emailSent) {
         emailSent = true; // Предотвращаем повторную отправку
 
         try {
-          console.log('Starting email sending process...');
           const interpretation = getHearingInterpretation();
 
-          // Вычисляем средние значения для email
           const leftValues = Object.values(testResults.left || {});
           const rightValues = Object.values(testResults.right || {});
           const allValues = [...leftValues, ...rightValues];
@@ -71,7 +57,6 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
             : 0;
 
           // Генерируем PDF как base64
-          console.log('Generating PDF...');
           const pdfResult = await generatePDF(
             userData,
             testResults,
@@ -81,15 +66,8 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
             { returnBase64: true }
           );
 
-          console.log('PDF generation result:', {
-            success: pdfResult.success,
-            hasBase64: !!pdfResult.base64,
-            base64Length: pdfResult.base64?.length
-          });
-
           if (pdfResult.success && pdfResult.base64) {
             // Отправляем email с PDF
-            console.log('Sending email to:', userData.email);
             await sendResultsEmail({
               to: userData.email,
               name: userData.name,
@@ -100,21 +78,15 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
               description: interpretation.description,
               pdfBase64: pdfResult.base64
             });
-
-            console.log('Results sent to email successfully');
           } else {
             console.error('PDF generation failed or no base64:', pdfResult);
           }
         } catch (error) {
           console.error('Error sending email:', error);
-          console.error('Error stack:', error.stack);
         }
-      } else {
-        console.log('Conditions not met for sending email');
       }
     };
 
-    // Даем графикам немного времени на отрисовку
     const timer = setTimeout(() => {
       sendEmailAutomatically();
     }, 1000);
@@ -192,7 +164,7 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
         Рекомендуется консультация сурдолога и подбор слухового аппарата, который поможет вернуть комфортное восприятие звуков.`,
         color: '#FF9800',
 
-        hearingAid: '/images/hearing-aids/image2.png',
+        hearingAid: '/images/hearing-aids/image1.png',
         hearingAidTitle: 'Заушные аппараты с выносным ресивером (RIC)',
         hearingAidDescription: 'Современные заушные аппараты с динамиком в ушном канале. Обеспечивают отличное качество звука, комфортны в ношении. Подходят для умеренной потери слуха, имеют широкие возможности настройки и подавления шума.'
       };
@@ -207,7 +179,7 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
         В нашей клинике можно пройти полное обследование и подобрать индивидуальный усилитель слуха.`,
         color: '#FF5722',
 
-        hearingAid: '/images/hearing-aids/image3.png',
+        hearingAid: '/images/hearing-aids/image1.png',
         hearingAidTitle: 'Мощные заушные аппараты (BTE)',
         hearingAidDescription: 'Классические заушные аппараты повышенной мощности. Надежны, долговечны и обеспечивают мощное усиление звука. Подходят для умеренно-тяжёлой потери слуха, оснащены продвинутыми функциями шумоподавления и направленными микрофонами.'
       };
@@ -222,7 +194,7 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
         Современные технологии позволяют вернуть возможность слышать и улучшить качество жизни даже при тяжелой степени снижения слуха.`,
         color: '#F44336',
 
-        hearingAid: '/images/hearing-aids/image3.png',
+        hearingAid: '/images/hearing-aids/image1.png',
         hearingAidTitle: 'Сверхмощные заушные аппараты (Power BTE)',
         hearingAidDescription: 'Сверхмощные слуховые аппараты для тяжёлой потери слуха. Обеспечивают максимальное усиление и отличную разборчивость речи. Оснащены влагозащитой, прочным корпусом и продвинутыми технологиями обработки звука для сложных акустических условий.'
       };

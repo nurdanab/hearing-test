@@ -31,8 +31,6 @@ export async function submitUserDataToCRM(userData) {
     }
 
     const result = await response.json();
-    console.log('User data submitted to CRM successfully:', result.leadId);
-
     return result.leadId;
 
   } catch (error) {
@@ -53,7 +51,6 @@ export async function submitUserDataToCRM(userData) {
  */
 export async function submitTestResultsToCRM(leadId, testResults, interpretation) {
   if (!leadId) {
-    console.warn('No lead ID available, skipping CRM update');
     return false;
   }
 
@@ -76,8 +73,6 @@ export async function submitTestResultsToCRM(leadId, testResults, interpretation
     }
 
     const result = await response.json();
-    console.log('Test results submitted to CRM successfully');
-
     return true;
 
   } catch (error) {
@@ -121,8 +116,6 @@ export async function submitCompleteDataToCRM(userData, testResults, interpretat
     }
 
     const result = await response.json();
-    console.log('Complete data submitted to CRM successfully:', result.leadId);
-
     return result.leadId;
 
   } catch (error) {

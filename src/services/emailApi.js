@@ -28,8 +28,6 @@ export async function sendResultsEmail({
   pdfBase64
 }) {
   try {
-    console.log('Sending results to email:', to);
-
     const response = await fetch(`/.netlify/functions/send-email`, {
       method: 'POST',
       headers: {
@@ -54,8 +52,6 @@ export async function sendResultsEmail({
     }
 
     const result = await response.json();
-    console.log('Email sent successfully');
-
     return true;
 
   } catch (error) {

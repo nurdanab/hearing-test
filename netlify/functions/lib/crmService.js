@@ -26,8 +26,6 @@ export async function createLead(userData) {
       created_at: new Date().toISOString()
     };
 
-    console.log('Creating lead in CRM:', { name: userData.name, email: userData.email });
-
     const response = await fetch(`${CRM_API_URL}/leads`, {
       method: 'POST',
       headers: {
@@ -43,7 +41,6 @@ export async function createLead(userData) {
     }
 
     const result = await response.json();
-    console.log('Lead created successfully:', result.id || result);
 
     return {
       success: true,
@@ -95,12 +92,6 @@ export async function updateLeadWithResults(leadId, testData) {
       test_date: new Date().toISOString()
     };
 
-    console.log('Updating lead with results:', {
-      leadId,
-      test_result: crmData.test_result,
-      average_db: crmData.average_db
-    });
-
     const response = await fetch(`${CRM_API_URL}/leads/${leadId}`, {
       method: 'PUT',
       headers: {
@@ -116,7 +107,6 @@ export async function updateLeadWithResults(leadId, testData) {
     }
 
     const result = await response.json();
-    console.log('Lead updated successfully:', leadId);
 
     return {
       success: true,
@@ -170,12 +160,6 @@ export async function createLeadWithResults(userData, testData) {
       test_date: new Date().toISOString()
     };
 
-    console.log('Creating lead with full data:', {
-      name: userData.name,
-      test_result: crmData.test_result,
-      average_db: crmData.average_db
-    });
-
     const response = await fetch(`${CRM_API_URL}/leads`, {
       method: 'POST',
       headers: {
@@ -191,7 +175,6 @@ export async function createLeadWithResults(userData, testData) {
     }
 
     const result = await response.json();
-    console.log('Lead created with results successfully');
 
     return {
       success: true,

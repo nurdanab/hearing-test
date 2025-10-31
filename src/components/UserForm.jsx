@@ -13,10 +13,8 @@ const UserForm = ({ onNext, onBack, initialData }) => {
   const [touched, setTouched] = useState({});
 
   const formatPhoneNumber = (value) => {
-    // Удаляем все нецифровые символы
     const phoneNumber = value.replace(/\D/g, '');
 
-    // Ограничиваем длину до 11 цифр (7 + 10)
     const limitedPhone = phoneNumber.slice(0, 11);
 
     // Форматируем номер
@@ -53,7 +51,6 @@ const UserForm = ({ onNext, onBack, initialData }) => {
       [name]: newValue
     }));
 
-    // Очистить ошибку при вводе
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,

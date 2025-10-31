@@ -21,6 +21,9 @@ dist-ssr
 .netlify
 netlify/functions/node_modules
 
+# Test files
+test-wordpress-iframe.html
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

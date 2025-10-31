@@ -4,6 +4,6 @@
   "type": "module",
   "description": "Netlify Functions for Hearing Test application",
   "dependencies": {
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^7.0.10"
   }
 }

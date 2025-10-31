@@ -40,8 +40,6 @@ export const sendHeightToParent = () => {
       },
       '*'
     );
-
-    console.log('[iframe] Sent height to parent:', height);
   } catch (error) {
     console.error('[iframe] Error sending height:', error);
   }
@@ -61,8 +59,6 @@ export const scrollParentToTop = () => {
       },
       '*'
     );
-
-    console.log('[iframe] Sent scroll to top request to parent');
   } catch (error) {
     console.error('[iframe] Error sending scroll request:', error);
   }
@@ -110,8 +106,6 @@ export const sendReadyMessage = () => {
       },
       '*'
     );
-
-    console.log('[iframe] Sent ready message to parent');
   } catch (error) {
     console.error('[iframe] Error sending ready message:', error);
   }

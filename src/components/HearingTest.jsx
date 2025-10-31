@@ -2,12 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import styles from './HearingTest.module.scss';
 
 const HearingTest = ({ onNext, onBack }) => {
-  // Константы
+
   const FREQUENCIES = [250, 500, 1000, 1500, 2000, 8000];
   const DB_LEVELS = [-10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105, 110, 115, 120];
   const EARS = ['left', 'right'];
 
-  // Состояния
   const [currentEarIndex, setCurrentEarIndex] = useState(0);
   const [currentFrequencyIndex, setCurrentFrequencyIndex] = useState(0);
   const [currentDbLevel, setCurrentDbLevel] = useState(8); // 30 дБ (индекс 8 в массиве)
@@ -46,7 +45,7 @@ const HearingTest = ({ onNext, onBack }) => {
     };
   }, []);
 
-  // Текущие параметры
+
   const currentEar = EARS[currentEarIndex];
   const currentFrequency = FREQUENCIES[currentFrequencyIndex];
   const currentDb = DB_LEVELS[currentDbLevel];
@@ -153,9 +152,9 @@ const HearingTest = ({ onNext, onBack }) => {
     // Переключаемся на режим "поиска снизу вверх"
     setSearchingDown(false);
 
-    // Увеличиваем громкость на +5 dB (шаг 1 в массиве с шагом 5 дБ)
-    if (currentDbLevel < DB_LEVELS.length - 1) {
-      setCurrentDbLevel(currentDbLevel + 1);
+    // Увеличиваем громкость на +10 dB (шаг 2 в массиве с шагом 5 дБ: 5*2=10)
+    if (currentDbLevel < DB_LEVELS.length - 2) {
+      setCurrentDbLevel(currentDbLevel + 2);
     } else {
       // Если достигли максимума, сохраняем максимальное значение и переходим дальше
       saveThresholdAndMoveNext();
@@ -203,9 +202,6 @@ const HearingTest = ({ onNext, onBack }) => {
         setCurrentFrequencyIndex(0);
         setCurrentDbLevel(8); // Сбрасываем на 30 дБ (индекс 8)
         setSearchingDown(true); // Сбрасываем флаг направления поиска
-      } else {
-        // Тест завершён
-        console.log('Результаты теста:', newResults);
       }
     }
   };

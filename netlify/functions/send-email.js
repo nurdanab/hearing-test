@@ -6,9 +6,6 @@ import { sendTestResults } from './lib/emailService.js';
  * POST /.netlify/functions/send-email
  */
 export async function handler(event) {
-  console.log('=== send-email function called ===');
-  console.log('HTTP Method:', event.httpMethod);
-
   // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -19,7 +16,6 @@ export async function handler(event) {
 
   // Handle preflight OPTIONS request
   if (event.httpMethod === 'OPTIONS') {
-    console.log('Handling OPTIONS request');
     return {
       statusCode: 204,
       headers,
@@ -29,7 +25,6 @@ export async function handler(event) {
 
   // Only allow POST
   if (event.httpMethod !== 'POST') {
-    console.log('Method not allowed:', event.httpMethod);
     return {
       statusCode: 405,
       headers,
@@ -38,14 +33,7 @@ export async function handler(event) {
   }
 
   try {
-    console.log('Parsing request body...');
     const body = JSON.parse(event.body);
-    console.log('Request data:', {
-      to: body.to,
-      name: body.name,
-      testResult: body.testResult,
-      hasPdf: !!body.pdfBase64
-    });
     const {
       to,
       name,
@@ -82,8 +70,6 @@ export async function handler(event) {
         })
       };
     }
-
-    console.log('Sending test results to:', to);
 
     // Отправка email
     const result = await sendTestResults({
