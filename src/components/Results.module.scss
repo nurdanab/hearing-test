@@ -2,17 +2,24 @@
 @use "sass:color";
 
 // Переменные
-$primary-color: #224F75;
-$background-card: #F4FAFF;
+$primary-color: #d40000;
+$background-card: #FAF9F6;
 $background-main: #ffffff;
 $text-color: #000000;
 $info-bg: #E3F2FD;
-$info-border: #90CAF9;
-$border-color: #e0e0e0;
-$border-radius: 25px;
+
+$info-border: #d40000;
+$border-color: #fff9f9;
+$border-radius: 20px;
 $input-border-radius: 30px;
 
 // Миксины для адаптива
+@mixin small-mobile {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
 @mixin mobile {
   @media (max-width: 767px) {
     @content;
@@ -37,12 +44,18 @@ $input-border-radius: 30px;
 }
 
 .container {
+  // Стили для совместимости с WordPress
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 0;
   width: 100%;
+  max-width: 100%;
 }
 
 .stepsIndicator {
@@ -112,7 +125,7 @@ $input-border-radius: 30px;
   border-radius: $input-border-radius;
   padding: 40px 60px 60px;
   width: 100%;
-  max-width: 900px;
+  max-width: 800px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
 
@@ -127,23 +140,30 @@ $input-border-radius: 30px;
 }
 
 .title {
+
   font-family: 'Montserrat', sans-serif;
-  font-size: 56px;
+  font-size: 36px;
   font-weight: 700;
   color: $text-color;
-  margin: 0 0 62px 0;
+  margin: 0 0 40px 0;
   text-align: left;
   line-height: 1.2;
 
-  @include mobile {
-    font-size: 32px;
-    margin-bottom: 54px;
+  @include tablet {
+    font-size: 28px;
+    margin-bottom: 30px;
   }
 
-  @include tablet {
-    font-size: 44px;
-    margin-bottom: 58px;
+  @include mobile {
+    font-size: 22px;
+    margin-bottom: 24px;
   }
+
+  @include small-mobile {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
 }
 
 .resultInline {
@@ -170,6 +190,7 @@ $input-border-radius: 30px;
 }
 
 .resultText {
+  font-family: 'Roboto', sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: $text-color;
@@ -262,6 +283,7 @@ $input-border-radius: 30px;
 }
 
 .descriptionText {
+  font-family: 'Roboto', sans-serif;
   font-size: 18px;
   color: $text-color;
   line-height: 1.7;
@@ -288,6 +310,7 @@ $input-border-radius: 30px;
 }
 
 .hearingAidBoxTitle {
+  font-family: 'Roboto', sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: $text-color;
@@ -341,6 +364,7 @@ $input-border-radius: 30px;
 }
 
 .hearingAidTitle {
+  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   font-weight: 600;
   color: $primary-color;
@@ -353,6 +377,7 @@ $input-border-radius: 30px;
 }
 
 .hearingAidDescription {
+  font-family: 'Roboto', sans-serif;
   font-size: 15px;
   color: $text-color;
   line-height: 1.6;
@@ -365,21 +390,22 @@ $input-border-radius: 30px;
 }
 
 .infoBox {
-  background-color: $info-bg;
-  border: 1.5px solid $info-border;
+  background-color: #fff9f9;
+  border: 1px solid #d40000;
   border-radius: 16px;
   padding: 20px 24px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 
   @include mobile {
     padding: 16px 18px;
-    margin-bottom: 32px;
+    margin-bottom: 22px;
     border-radius: 12px;
   }
 }
 
 .infoText {
-  font-size: 15px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
   color: $text-color;
   line-height: 1.5;
   margin: 0;
@@ -390,6 +416,20 @@ $input-border-radius: 30px;
 
   @include mobile {
     font-size: 13px;
+  }
+}
+
+.infoText2 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  color: $text-color;
+  line-height: 1.5;
+  margin-bottom: 30px;
+
+  @include mobile {
+    font-size: 13px;
+    margin-bottom: 22px;
+
   }
 }
 
@@ -407,6 +447,7 @@ $input-border-radius: 30px;
 }
 
 .backButton {
+  font-family: 'Roboto', sans-serif;
   background-color: transparent;
   color: $primary-color;
   border: 1.5px solid $primary-color;
@@ -423,6 +464,10 @@ $input-border-radius: 30px;
     background-color: rgba($primary-color, 0.05);
   }
 
+  &:focus {
+    outline: none;
+  }
+
   @include mobile {
     padding: 14px 28px;
     font-size: 16px;
@@ -432,6 +477,7 @@ $input-border-radius: 30px;
 }
 
 .downloadButton {
+  font-family: 'Roboto', sans-serif;
   background-color: transparent;
   color: $primary-color;
   border: 1.5px solid $primary-color;
@@ -452,6 +498,10 @@ $input-border-radius: 30px;
     background-color: rgba($primary-color, 0.1);
   }
 
+  &:focus {
+    outline: none;
+  }
+
   &:disabled {
     background-color: #f5f5f5;
     color: #999999;
@@ -469,6 +519,7 @@ $input-border-radius: 30px;
 }
 
 .submitButton {
+  font-family: 'Roboto', sans-serif;
   background-color: $primary-color;
   color: white;
   border: none;
@@ -487,6 +538,10 @@ $input-border-radius: 30px;
 
   &:active:not(:disabled) {
     background-color: color.adjust($primary-color, $lightness: -12%);
+  }
+
+  &:focus {
+    outline: none;
   }
 
   &:disabled {

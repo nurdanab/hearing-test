@@ -2,11 +2,12 @@ import { useRef, useEffect, useState } from 'react';
 import styles from './Results.module.scss';
 import { drawUserResults, drawNormalResults } from './audiogramHelpers';
 import { generatePDF } from '../utils/pdfGenerator';
+import { submitTestResultsToCRM } from '../services/crmApi';
+import { sendResultsEmail } from '../services/emailApi';
 
-const Results = ({ testResults, onBack, onFinish, userData }) => {
+const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
   const userCanvasRef = useRef(null);
   const normalCanvasRef = useRef(null);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Рисуем графики при монтировании и изменении данных
   useEffect(() => {
@@ -19,6 +20,84 @@ const Results = ({ testResults, onBack, onFinish, userData }) => {
     if (normalCanvasRef.current) {
       drawNormalResults(normalCanvasRef.current);
     }
+  }, []);
+
+  // Отправляем результаты в CRM при монтировании компонента
+  useEffect(() => {
+    if (crmLeadId && testResults) {
+      const interpretation = getHearingInterpretation();
+      submitTestResultsToCRM(crmLeadId, testResults, interpretation);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Выполняется только при монтировании
+
+  // Автоматически отправляем результаты на email после отрисовки графиков
+  useEffect(() => {
+    let emailSent = false;
+
+    const sendEmailAutomatically = async () => {
+      // Проверяем что графики отрисованы и email еще не отправлен
+      if (userCanvasRef.current && normalCanvasRef.current && userData?.email && !emailSent) {
+        emailSent = true; // Предотвращаем повторную отправку
+
+        try {
+          const interpretation = getHearingInterpretation();
+
+          // Вычисляем средние значения для email
+          const leftValues = Object.values(testResults.left || {});
+          const rightValues = Object.values(testResults.right || {});
+          const allValues = [...leftValues, ...rightValues];
+
+          const leftAvgDb = leftValues.length > 0
+            ? Math.round(leftValues.reduce((sum, val) => sum + val, 0) / leftValues.length)
+            : 0;
+
+          const rightAvgDb = rightValues.length > 0
+            ? Math.round(rightValues.reduce((sum, val) => sum + val, 0) / rightValues.length)
+            : 0;
+
+          const avgDb = allValues.length > 0
+            ? Math.round(allValues.reduce((sum, val) => sum + val, 0) / allValues.length)
+            : 0;
+
+          // Генерируем PDF как base64
+          const pdfResult = await generatePDF(
+            userData,
+            testResults,
+            interpretation,
+            userCanvasRef.current,
+            normalCanvasRef.current,
+            { returnBase64: true }
+          );
+
+          if (pdfResult.success && pdfResult.base64) {
+            // Отправляем email с PDF
+            await sendResultsEmail({
+              to: userData.email,
+              name: userData.name,
+              testResult: interpretation.text,
+              averageDb: avgDb,
+              leftEarDb: leftAvgDb,
+              rightEarDb: rightAvgDb,
+              description: interpretation.description,
+              pdfBase64: pdfResult.base64
+            });
+
+            console.log('Results sent to email successfully');
+          }
+        } catch (error) {
+          console.error('Error sending email:', error);
+        }
+      }
+    };
+
+    // Даем графикам немного времени на отрисовку
+    const timer = setTimeout(() => {
+      sendEmailAutomatically();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Интерпретация результатов
@@ -52,96 +131,84 @@ const Results = ({ testResults, onBack, onFinish, userData }) => {
 
     if (avgDb <= 25) {
       return {
+        // 1 СТЕПЕНЬ
         level: 'normal',
         text: 'Нормальный слух',
-        description: `Ваш слух находится в пределах нормы. Средний порог слышимости составляет ${Math.round(avgDb)} дБ, что соответствует нормальному восприятию звуков. Вы можете слышать тихую речь и различать звуки в обычных условиях без затруднений.`,
+        description: `Слух в пределах нормы, значимых отклонений не выявлено.
+        Важно беречь уши от слишком громких звуков и проходить профилактическую проверку раз в год.
+        Если появляется звон, ощущение заложенности или легкий дискомфорт, лучше пройти офлайн-аудиометрию в нашей клинике, чтобы убедиться, что все в порядке.`,
         color: '#4CAF50',
+
         hearingAid: null,
         hearingAidTitle: 'Слуховой аппарат не требуется',
         hearingAidDescription: 'При нормальном слухе использование слухового аппарата не требуется. Рекомендуется регулярная проверка слуха для профилактики.'
       };
     } else if (avgDb <= 40) {
       return {
+        // 2 СТЕПЕНЬ
         level: 'mild',
-        text: 'Лёгкая потеря слуха',
-        description: `Обнаружена лёгкая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Вы можете испытывать трудности при восприятии тихой речи или звуков на расстоянии, особенно в шумной обстановке. Рекомендуется консультация специалиста для оценки необходимости коррекции слуха.`,
+        text: 'Легкая степень',
+        description: `Отмечается небольшое снижение слуха.
+        Тихая речь или шепот могут быть слышны нечетко, особенно в шумных помещениях.
+        Рекомендуется провести аудиометрию для уточнения причин и, при необходимости, подобрать профилактическое лечение или легкий слуховой аппарат.
+        Ранняя диагностика помогает сохранить слух надолго. Наша клиника проводит офлайн-аудиометрию и консультации специалистов.`,
         color: '#FFC107',
+
         hearingAid: '/images/hearing-aids/image1.png',
         hearingAidTitle: 'Внутриканальные аппараты (ITC/CIC)',
         hearingAidDescription: 'Компактные устройства, размещаемые внутри слухового канала. Практически незаметны, идеально подходят для лёгкой степени потери слуха. Обеспечивают естественное звучание и комфорт при повседневном использовании.'
       };
     } else if (avgDb <= 55) {
       return {
+        // 3 СТЕПЕНЬ
         level: 'moderate',
-        text: 'Умеренная потеря слуха',
-        description: `Обнаружена умеренная потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Вы испытываете значительные трудности в восприятии обычной речи без усиления звука. Затруднено общение в группе людей и при фоновом шуме. Настоятельно рекомендуется обращение к врачу-сурдологу для подбора слухового аппарата.`,
+        text: 'Умеренная степень',
+        description: `Слух снижен заметно.
+        Разговорная речь воспринимается не полностью, особенно если собеседник говорит тихо или стоит на расстоянии.
+        Четкость звучания восстанавливается только при повышенном голосе.
+        Рекомендуется консультация сурдолога и подбор слухового аппарата, который поможет вернуть комфортное восприятие звуков.`,
         color: '#FF9800',
+
         hearingAid: '/images/hearing-aids/image2.png',
         hearingAidTitle: 'Заушные аппараты с выносным ресивером (RIC)',
         hearingAidDescription: 'Современные заушные аппараты с динамиком в ушном канале. Обеспечивают отличное качество звука, комфортны в ношении. Подходят для умеренной потери слуха, имеют широкие возможности настройки и подавления шума.'
       };
     } else if (avgDb <= 70) {
       return {
+        // 4 СТЕПЕНЬ
         level: 'moderately-severe',
-        text: 'Умеренно-тяжёлая потеря слуха',
-        description: `Обнаружена умеренно-тяжёлая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Восприятие речи значительно затруднено даже при громком разговоре. Необходимо использование слухового аппарата. Обязательно обратитесь к врачу-сурдологу для комплексного обследования и подбора средств реабилитации.`,
+        text: 'Выраженная степень',
+        description: `Слух снижен значительно.
+        Речь различается с трудом, понятна только громкая речь или отдельные слова вблизи.
+        Без слухового аппарата становится сложно общаться и воспринимать звуки окружающего мира.
+        В нашей клинике можно пройти полное обследование и подобрать индивидуальный усилитель слуха.`,
         color: '#FF5722',
+
         hearingAid: '/images/hearing-aids/image3.png',
         hearingAidTitle: 'Мощные заушные аппараты (BTE)',
         hearingAidDescription: 'Классические заушные аппараты повышенной мощности. Надежны, долговечны и обеспечивают мощное усиление звука. Подходят для умеренно-тяжёлой потери слуха, оснащены продвинутыми функциями шумоподавления и направленными микрофонами.'
       };
-    } else if (avgDb <= 90) {
+    } else {
       return {
-        level: 'severe',
-        text: 'Тяжёлая потеря слуха',
-        description: `Обнаружена тяжёлая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Восприятие речи без слухового аппарата практически невозможно. Слышны только очень громкие звуки. Требуется срочная консультация врача-сурдолога и использование мощного слухового аппарата или рассмотрение вопроса о кохлеарной имплантации.`,
+        // 5 СТЕПЕНЬ
+        level: 'severe', 
+        text: 'Тяжелая степень',
+        description: `Слух практически утрачен.
+        Разговорная речь не различается, слышны только очень громкие звуки, например, крик или работающий двигатель.
+        В этом случае важно обратиться к сурдологу для подбора подходящего решения: слухопротезирования или кохлеарной имплантации.
+        Современные технологии позволяют вернуть возможность слышать и улучшить качество жизни даже при тяжелой степени снижения слуха.`,
         color: '#F44336',
+
         hearingAid: '/images/hearing-aids/image3.png',
         hearingAidTitle: 'Сверхмощные заушные аппараты (Power BTE)',
         hearingAidDescription: 'Сверхмощные слуховые аппараты для тяжёлой потери слуха. Обеспечивают максимальное усиление и отличную разборчивость речи. Оснащены влагозащитой, прочным корпусом и продвинутыми технологиями обработки звука для сложных акустических условий.'
       };
-    } else {
-      return {
-        level: 'profound',
-        text: 'Глубокая потеря слуха',
-        description: `Обнаружена глубокая потеря слуха. Средний порог слышимости: ${Math.round(avgDb)} дБ. Восприятие звуков крайне ограничено или отсутствует. Необходима срочная консультация врача-сурдолога для рассмотрения возможности кохлеарной имплантации или использования других высокотехнологичных средств реабилитации.`,
-        color: '#D32F2F',
-        hearingAid: '/images/hearing-aids/image2.png',
-        hearingAidTitle: 'Кохлеарный имплант',
-        hearingAidDescription: 'Высокотехнологичное устройство, которое обходит поврежденные части уха и напрямую стимулирует слуховой нерв. Подходит для глубокой потери слуха, когда традиционные слуховые аппараты неэффективны. Требует хирургической установки и последующей настройки специалистом.'
-      };
-    }
+    } 
   };
 
   const interpretation = getHearingInterpretation();
   const steps = [1, 2, 3, 4, 5, 6];
   const currentStep = 6;
-
-  // Функция для скачивания PDF
-  const handleDownloadPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      const result = await generatePDF(
-        userData,
-        testResults,
-        interpretation,
-        userCanvasRef.current,
-        normalCanvasRef.current
-      );
-
-      if (result.success) {
-        console.log('PDF успешно сгенерирован:', result.fileName);
-      } else {
-        console.error('Ошибка генерации PDF:', result.error);
-        alert('Произошла ошибка при генерации PDF. Попробуйте еще раз.');
-      }
-    } catch (error) {
-      console.error('Ошибка:', error);
-      alert('Произошла ошибка при генерации PDF. Попробуйте еще раз.');
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
 
   return (
     <div className={styles.container}>
@@ -225,20 +292,17 @@ const Results = ({ testResults, onBack, onFinish, userData }) => {
         <div className={styles.infoBox}>
           <p className={styles.infoText}>
             <strong>Примечание:</strong> Данный тест является ориентировочным и не заменяет
-            профессиональную диагностику. Для точного определения состояния слуха обратитесь
-            к врачу-сурдологу или отоларингологу.
+            профессиональную диагностику.
           </p>
         </div>
 
+        {/* <div className={styles.infoBox} style={{ background: '#E3F2FD', borderColor: '#2196F3' }}> */}
+          <p className={styles.infoText2}>
+            Результаты тестирования будут также отправлены на вашу почту.
+          </p>
+        {/* </div> */}
+
         <div className={styles.buttonGroup}>
-          <button
-            type="button"
-            className={styles.downloadButton}
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPDF}
-          >
-            {isGeneratingPDF ? 'Генерация PDF...' : 'Скачать результаты в PDF'}
-          </button>
           <button
             type="button"
             className={styles.submitButton}

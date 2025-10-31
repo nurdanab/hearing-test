@@ -1,0 +1,37 @@
+[build]
+  # Команда для сборки frontend
+  command = "npm run build"
+  # Папка с собранным frontend
+  publish = "dist"
+  # Папка с Netlify Functions
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node.js версия
+  NODE_VERSION = "18"
+
+# Redirects для SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  # Исключаем API вызовы из redirect
+  conditions = {Role = ["user"], Method = ["GET"]}
+  force = false
+
+# Headers для безопасности
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Headers для Netlify Functions (CORS)
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"

@@ -4,8 +4,11 @@ import jsPDF from 'jspdf';
 /**
  * Генерирует PDF документ с результатами теста слуха
  * Использует рендеринг HTML в изображение для полной поддержки кириллицы
+ *
+ * @param {Object} options - Опции генерации
+ * @param {boolean} options.returnBase64 - Если true, возвращает PDF как base64 вместо скачивания
  */
-export const generatePDF = async (userData, testResults, interpretation, userCanvasElement, normalCanvasElement) => {
+export const generatePDF = async (userData, testResults, interpretation, userCanvasElement, normalCanvasElement, options = {}) => {
   try {
     // Создаем временный контейнер для рендеринга
     const tempContainer = document.createElement('div');
@@ -16,7 +19,8 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
     tempContainer.style.backgroundColor = 'white';
     tempContainer.style.padding = '40px';
     tempContainer.style.fontFamily = 'Arial, sans-serif';
-
+ 
+    
     // Форматируем дату
     const testDate = new Date().toLocaleDateString('ru-RU', {
       year: 'numeric',
@@ -27,42 +31,42 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
     // Создаем HTML контент
     tempContainer.innerHTML = `
       <div style="font-family: Arial, sans-serif;">
-        <h1 style="color: #224F75; font-size: 28px; margin-bottom: 20px; text-align: center;">
-          Результаты теста слуха от немецкого слухового центра «Eurolux»
+        <h1 style="color: #000; font-size: 28px; margin-bottom: 30px; text-align: center;">
+          Результаты теста слуха от немецкого слухового центра DomSluha
         </h1>
 
-        <div style="border-bottom: 2px solid #224F75; margin-bottom: 20px;"></div>
+        <div style="border-bottom: 1px solid #333; margin-bottom: 40px;"></div>
 
-        <div style="margin-bottom: 25px;">
-          <h2 style="color: #224F75; font-size: 18px; margin-bottom: 10px;">Данные пациента:</h2>
-          <p style="margin: 5px 0; font-size: 14px;"><strong>ФИО:</strong> ${userData?.name || 'Не указано'}</p>
-          <p style="margin: 5px 0; font-size: 14px;"><strong>Телефон:</strong> ${userData?.phone || 'Не указан'}</p>
-          <p style="margin: 5px 0; font-size: 14px;"><strong>Email:</strong> ${userData?.email || 'Не указан'}</p>
-          <p style="margin: 5px 0; font-size: 14px;"><strong>Дата прохождения:</strong> ${testDate}</p>
+        <div style="margin-bottom: 40px;">
+          <h2 style="color: #d40000; font-size: 18px; margin-bottom: 10px;">Данные пациента:</h2>
+          <p style="margin: 6px 0; font-size: 16px;"><strong>ФИО:</strong> ${userData?.name || 'Не указано'}</p>
+          <p style="margin: 6px 0; font-size: 16px;"><strong>Телефон:</strong> ${userData?.phone || 'Не указан'}</p>
+          <p style="margin: 6px 0; font-size: 16px;"><strong>Email:</strong> ${userData?.email || 'Не указан'}</p>
+          <p style="margin: 6px 0; font-size: 16px;"><strong>Дата прохождения:</strong> ${testDate}</p>
         </div>
 
-        <div style="margin-bottom: 25px;">
-          <h2 style="color: #224F75; font-size: 18px; margin-bottom: 10px;">Ваш результат:</h2>
-          <p style="font-size: 16px; font-weight: bold; color: ${interpretation.color}; margin: 5px 0;">
+        <div style="margin-bottom: 40px;">
+          <h2 style="color: #d40000; font-size: 18px; margin-bottom: 10px;">Ваш результат:</h2>
+          <p style="font-size: 18px; color: #000; margin: 5px 0;">
             ${interpretation.text}
           </p>
         </div>
 
-        <div style="margin-bottom: 25px;">
-          <h3 style="color: #224F75; font-size: 16px; margin-bottom: 10px;">Описание результата:</h3>
-          <p style="font-size: 13px; line-height: 1.6; margin: 0;">
+        <div style="margin-bottom: 40px;">
+          <h3 style="color: #d40000; font-size: 18px; margin-bottom: 10px;">Описание результата:</h3>
+          <p style="font-size: 16px; line-height: 1.6; margin: 0;">
             ${interpretation.description}
           </p>
         </div>
 
-        <div style="margin-bottom: 25px;">
-          <h3 style="color: #224F75; font-size: 16px; margin-bottom: 15px;">Аудиограммы:</h3>
+        <div style="margin-bottom: 40px;">
+          <h3 style="color: #d40000; font-size: 18px; margin-bottom: 15px;">Аудиограммы:</h3>
           <div id="charts-placeholder" style="margin: 20px 0;"></div>
         </div>
 
         ${interpretation.hearingAidTitle ? `
           <div style="margin-bottom: 25px;">
-            <h3 style="color: #224F75; font-size: 16px; margin-bottom: 10px;">
+            <h3 style="color: #d40000; font-size: 18px; margin-bottom: 10px;">
               Рекомендация по слуховому аппарату:
             </h3>
             ${interpretation.hearingAid ? `
@@ -72,45 +76,45 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
                        style="width: 200px; height: auto; border-radius: 8px;" crossorigin="anonymous" />
                 </div>
                 <div style="flex: 1;">
-                  <p style="font-size: 14px; font-weight: bold; color: #224F75; margin: 0 0 8px 0;">
+                  <p style="font-size: 16px; font-weight: bold; color: #000; margin: 0 0 8px 0;">
                     ${interpretation.hearingAidTitle}
                   </p>
-                  <p style="font-size: 13px; line-height: 1.6; margin: 0;">
+                  <p style="font-size: 16px; line-height: 1.6; margin: 0;">
                     ${interpretation.hearingAidDescription}
                   </p>
                 </div>
               </div>
             ` : `
-              <p style="font-size: 14px; font-weight: bold; color: #224F75; margin: 5px 0;">
+              <p style="font-size: 16px; font-weight: bold; color: #000; margin: 5px 0;">
                 ${interpretation.hearingAidTitle}
               </p>
-              <p style="font-size: 13px; line-height: 1.6; margin: 5px 0;">
+              <p style="font-size: 16px; line-height: 1.6; margin: 5px 0;">
                 ${interpretation.hearingAidDescription}
               </p>
             `}
           </div>
         ` : ''}
 
-        <div style="background-color: #E3F2FD; border: 1px solid #90CAF9; border-radius: 8px; padding: 15px; margin-top: 25px;">
-          <p style="font-size: 12px; line-height: 1.5; margin: 0;">
+        <div style="background-color: #fff9f9; border: 1px solid #d40000; border-radius: 8px; padding: 15px; margin-top: 25px;">
+          <p style="font-size: 14px; line-height: 1.5; margin: 0;">
             <strong>Примечание:</strong> Данный тест является ориентировочным и не заменяет
             профессиональную диагностику. Для точного определения состояния слуха обратитесь
             к врачу-сурдологу или отоларингологу.
           </p>
         </div>
 
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #224F75;">
+        <div style="margin-top: 30px; padding-top: 40px; border-top: 1px solid #333;">
          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #333;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; color: #333;">
             <div>
-              <p style="margin: 5px 0;"><strong>Адрес:</strong> г. Алматы ул.Желтоксан (бывш.Мира), 126, угол ул.Богенбай батыра
+              <p style="margin: 6px 0;"><strong>Адрес:</strong> г. Алматы ул.Желтоксан (бывш.Мира), 126, угол ул.Богенбай батыра
               (бывш.Кирова), 136</p>
-              <p style="margin: 5px 0;"><strong>Email:</strong> euroluxsystema@mail.ru</p>
+              <p style="margin: 6px 0;"><strong>Email:</strong> euroluxsystema@mail.ru</p>
             </div>
             <div>
-              <p style="margin: 5px 0;"><strong>Алматы:</strong> +7 707 215 72 21</p>
-              <p style="margin: 5px 0;"><strong>Астана:</strong> +7 702 266 44 96</p>
-              <p style="margin: 5px 0;"><strong>Шымкент:</strong> +7 777 231 22 88</p>
+              <p style="margin: 6px 0;"><strong>Алматы:</strong> +7 707 215 72 21</p>
+              <p style="margin: 6px 0;"><strong>Астана:</strong> +7 702 266 44 96</p>
+              <p style="margin: 6px 0;"><strong>Шымкент:</strong> +7 777 231 22 88</p>
             </div>
           </div>
         </div>
@@ -202,11 +206,18 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
       );
     }
 
-    // Сохраняем PDF
-    const fileName = `Результаты_теста_слуха_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.pdf`;
-    pdf.save(fileName);
+    // Возвращаем результат в зависимости от options
+    if (options.returnBase64) {
+      // Возвращаем PDF как base64
+      const pdfBase64 = pdf.output('datauristring').split(',')[1]; // Убираем "data:application/pdf;base64,"
+      return { success: true, base64: pdfBase64 };
+    } else {
+      // Сохраняем PDF
+      const fileName = `Результаты_теста_слуха_${new Date().toLocaleDateString('ru-RU').replace(/\./g, '-')}.pdf`;
+      pdf.save(fileName);
+      return { success: true, fileName };
+    }
 
-    return { success: true, fileName };
   } catch (error) {
     console.error('Ошибка при генерации PDF:', error);
     return { success: false, error: error.message };

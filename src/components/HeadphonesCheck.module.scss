@@ -2,17 +2,23 @@
 @use "sass:color";
 
 // Переменные
-$primary-color: #224F75;
-$background-card: #F4FAFF;
+$primary-color: #d40000;
+$background-card: #FAF9F6;
 $background-main: #ffffff;
 $text-color: #000000;
 $warning-bg: #FFF4E5;
 $warning-border: #FFD99C;
 $border-color: #e0e0e0;
-$border-radius: 25px;
+$border-radius: 20px;
 $input-border-radius: 30px;
 
 // Миксины для адаптива
+@mixin small-mobile {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
 @mixin mobile {
   @media (max-width: 767px) {
     @content;
@@ -37,12 +43,18 @@ $input-border-radius: 30px;
 }
 
 .container {
+  // Стили для совместимости с WordPress
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 0;
   width: 100%;
+  max-width: 100%;
 }
 
 .stepsIndicator {
@@ -125,30 +137,36 @@ $input-border-radius: 30px;
     padding: 32px 40px 40px;
   }
 }
-
 .title {
+
   font-family: 'Montserrat', sans-serif;
-  font-size: 56px;
+  font-size: 36px;
   font-weight: 700;
   color: $text-color;
-  margin: 0 0 32px 0;
+  margin: 0 0 40px 0;
   text-align: left;
   line-height: 1.2;
 
+  @include tablet {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+
   @include mobile {
-    font-size: 32px;
+    font-size: 22px;
     margin-bottom: 24px;
   }
 
-  @include tablet {
-    font-size: 44px;
-    margin-bottom: 28px;
+  @include small-mobile {
+    font-size: 20px;
+    margin-bottom: 20px;
   }
+
 }
 
 .infoBox {
-  background-color: #E3F2FD;
-  border: 1.5px solid #90CAF9;
+  background-color: #fff9f9;
+  border: 1px solid #d40000;
   border-radius: 16px;
   padding: 20px 24px;
   margin-bottom: 32px;
@@ -161,6 +179,7 @@ $input-border-radius: 30px;
 }
 
 .infoText {
+  font-family: 'Roboto', sans-serif;
   font-size: 18px;
   color: $text-color;
   line-height: 1.6;
@@ -193,6 +212,7 @@ $input-border-radius: 30px;
 }
 
 .checkButton {
+  font-family: 'Roboto', sans-serif;
   flex: 1;
   position: relative;
   background-color: white;
@@ -213,14 +233,18 @@ $input-border-radius: 30px;
     background-color: rgba($primary-color, 0.05);
   }
 
-  &:active {
-    transform: scale(0.98);
+  // &:active {
+  //   transform: scale(0.98);
+  // }
+
+  &:focus {
+    outline: none;
   }
 
   &.checked {
     background-color: $primary-color;
     color: white;
-    border-color: $primary-color;
+    // border-color: $primary-color;
   }
 
   @include mobile {
@@ -251,6 +275,7 @@ $input-border-radius: 30px;
 }
 
 .backButton {
+  font-family: 'Roboto', sans-serif;
   background-color: transparent;
   color: $primary-color;
   border: 1.5px solid $primary-color;
@@ -267,6 +292,10 @@ $input-border-radius: 30px;
     background-color: rgba($primary-color, 0.05);
   }
 
+  &:focus {
+    outline: none;
+  }
+
   @include mobile {
     padding: 14px 28px;
     font-size: 16px;
@@ -276,6 +305,7 @@ $input-border-radius: 30px;
 }
 
 .submitButton {
+  font-family: 'Roboto', sans-serif;
   background-color: $primary-color;
   color: white;
   border: none;
@@ -294,6 +324,10 @@ $input-border-radius: 30px;
 
   &:active:not(:disabled) {
     background-color: color.adjust($primary-color, $lightness: -12%);
+  }
+
+  &:focus {
+    outline: none;
   }
 
   &:disabled {

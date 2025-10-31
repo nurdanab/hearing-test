@@ -2,3 +2,12 @@
   width: 100%;
   background-color: transparent;
 }
+
+/* Убираем синюю границу (outline) при фокусе на всех интерактивных элементах */
+button:focus,
+button:focus-visible,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}

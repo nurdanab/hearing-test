@@ -1,0 +1,9 @@
+{
+  "name": "hearing-test-functions",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Netlify Functions for Hearing Test application",
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  }
+}

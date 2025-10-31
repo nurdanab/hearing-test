@@ -12,6 +12,7 @@ import {
   observeContentChanges,
   sendReadyMessage
 } from './utils/iframeHelper';
+import { submitUserDataToCRM } from './services/crmApi';
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
   const [userData, setUserData] = useState(null);
   const [surveyData, setSurveyData] = useState(null);
   const [testResults, setTestResults] = useState(null);
+  const [crmLeadId, setCrmLeadId] = useState(null); // ID лида в CRM
 
   // Эффект для работы с iframe - отправка высоты и прокрутка
   useEffect(() => {
@@ -64,9 +66,22 @@ function App() {
     setCurrentStep(1); // Переход к форме
   };
 
-  const handleUserFormSubmit = (formData) => {
+  const handleUserFormSubmit = async (formData) => {
     console.log('Данные формы:', formData);
     setUserData(formData);
+
+    // Отправляем данные в CRM
+    const leadId = await submitUserDataToCRM({
+      name: formData.name,
+      phone: formData.phone,
+      email: formData.email
+    });
+
+    if (leadId) {
+      setCrmLeadId(leadId);
+      console.log('Лид создан в CRM с ID:', leadId);
+    }
+
     setCurrentStep(2); // Переход к следующему шагу
   };
 
@@ -121,12 +136,14 @@ function App() {
     console.log('Все данные:', {
       userData,
       surveyData,
-      testResults
+      testResults,
+      crmLeadId
     });
     // Сброс всех данных и возврат на приветственную страницу
     setUserData(null);
     setSurveyData(null);
     setTestResults(null);
+    setCrmLeadId(null);
     setCurrentStep(0);
   };
 
@@ -150,6 +167,7 @@ function App() {
         <Results
           testResults={testResults}
           userData={userData}
+          crmLeadId={crmLeadId}
           onBack={handleBackToHearingTest}
           onFinish={handleFinish}
         />

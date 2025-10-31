@@ -2,8 +2,8 @@
 @use "sass:color";
 
 // Переменные
-$primary-color: #224F75;
-$background-card: #F4FAFF;
+$primary-color: #d40000;
+$background-card: #FAF9F6;
 $background-main: #ffffff;
 $text-color: #000000;
 $warning-bg: #FFF4E5;
@@ -11,10 +11,16 @@ $warning-border: #FFD99C;
 $success-bg: #E8F5E9;
 $success-border: #A5D6A7;
 $border-color: #e0e0e0;
-$border-radius: 25px;
+$border-radius: 20px;
 $input-border-radius: 30px;
 
 // Миксины для адаптива
+@mixin small-mobile {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
 @mixin mobile {
   @media (max-width: 767px) {
     @content;
@@ -39,12 +45,18 @@ $input-border-radius: 30px;
 }
 
 .container {
+  // Стили для совместимости с WordPress
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 0;
   width: 100%;
+  max-width: 100%;
 }
 
 .stepsIndicator {
@@ -129,23 +141,30 @@ $input-border-radius: 30px;
 }
 
 .title {
+
   font-family: 'Montserrat', sans-serif;
-  font-size: 56px;
+  font-size: 36px;
   font-weight: 700;
   color: $text-color;
-  margin: 0 0 32px 0;
+  margin: 0 0 40px 0;
   text-align: left;
   line-height: 1.2;
 
+  @include tablet {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+
   @include mobile {
-    font-size: 32px;
+    font-size: 22px;
     margin-bottom: 24px;
   }
 
-  @include tablet {
-    font-size: 44px;
-    margin-bottom: 28px;
+  @include small-mobile {
+    font-size: 20px;
+    margin-bottom: 20px;
   }
+
 }
 
 .infoBox {
@@ -178,6 +197,7 @@ $input-border-radius: 30px;
 }
 
 .infoLabel {
+  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   color: #666;
   font-weight: 400;
@@ -188,6 +208,7 @@ $input-border-radius: 30px;
 }
 
 .infoValue {
+  font-family: 'Roboto', sans-serif;
   font-size: 18px;
   color: $text-color;
   font-weight: 600;
@@ -198,8 +219,8 @@ $input-border-radius: 30px;
 }
 
 .instructionBox {
-  background-color: #E3F2FD;
-  border: 1.5px solid #90CAF9;
+  background-color: #fff9f9;
+  border: 1px solid #d40000;
   border-radius: 16px;
   padding: 20px 24px;
   margin-bottom: 32px;
@@ -212,6 +233,7 @@ $input-border-radius: 30px;
 }
 
 .instructionText {
+  font-family: 'Roboto', sans-serif;
   font-size: 18px;
   color: $text-color;
   line-height: 1.6;
@@ -253,6 +275,10 @@ $input-border-radius: 30px;
 
   &:active:not(:disabled) {
     transform: scale(0.98);
+  }
+
+  &:focus {
+    outline: none;
   }
 
   &:disabled {
@@ -300,6 +326,7 @@ $input-border-radius: 30px;
 }
 
 .successText {
+  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   color: $text-color;
   line-height: 1.5;
@@ -327,6 +354,7 @@ $input-border-radius: 30px;
 }
 
 .testButton {
+  font-family: 'Roboto', sans-serif;
   flex: 1;
   border-radius: $input-border-radius;
   padding: 20px 32px;
@@ -343,6 +371,10 @@ $input-border-radius: 30px;
     transform: scale(0.98);
   }
 
+  &:focus {
+    outline: none;
+  }
+
   @include mobile {
     padding: 18px 24px;
     font-size: 16px;
@@ -350,34 +382,35 @@ $input-border-radius: 30px;
 }
 
 .notHeardButton {
-  background-color: #224F75;
+  background-color: $primary-color;
   color: white;
-  border: 1.5px solid #224F75;
+  border: 1.5px solid $primary-color;
 
   // &:hover {
-  //   background-color: #224F75;
+  //   background-color: $primary-color;
   // }
 
   &:active {
-    background-color: #224F75;
+    background-color: $primary-color;
   }
 }
 
 .heardButton {
-  background-color: #224F75;
+  background-color: $primary-color;
   color: white;
-  border: 1.5px solid #224F75;
+  border: 1.5px solid $primary-color;
 
   // &:hover {
-  //   background-color: color.adjust(#4CAF50, $lightness: -8%);
+  //   background-color: color.adjust($primary-color, $lightness: -8%);
   // }
 
   &:active {
-    background-color: #224F75;
+    background-color: $primary-color;
   }
 }
 
 .progressInfo {
+  font-family: 'Roboto', sans-serif;
   font-size: 16px;
   color: #666;
   text-align: center;
@@ -403,6 +436,7 @@ $input-border-radius: 30px;
 }
 
 .backButton {
+  font-family: 'Roboto', sans-serif;
   background-color: transparent;
   color: $primary-color;
   border: 1.5px solid $primary-color;
@@ -419,6 +453,10 @@ $input-border-radius: 30px;
   //   background-color: rgba($primary-color, 0.05);
   // }
 
+  &:focus {
+    outline: none;
+  }
+
   @include mobile {
     padding: 14px 28px;
     font-size: 16px;
@@ -428,6 +466,7 @@ $input-border-radius: 30px;
 }
 
 .submitButton {
+  font-family: 'Roboto', sans-serif;
   background-color: $primary-color;
   color: white;
   border: none;
@@ -446,6 +485,10 @@ $input-border-radius: 30px;
 
   &:active:not(:disabled) {
     background-color: color.adjust($primary-color);
+  }
+
+  &:focus {
+    outline: none;
   }
 
   &:disabled {
