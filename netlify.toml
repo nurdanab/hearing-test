@@ -1,6 +1,6 @@
 [build]
-  # Команда для сборки frontend
-  command = "npm run build"
+  # Команда для сборки frontend и установки зависимостей для functions
+  command = "npm run build && cd netlify/functions && npm install"
   # Папка с собранным frontend
   publish = "dist"
   # Папка с Netlify Functions
