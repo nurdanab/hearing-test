@@ -155,9 +155,9 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
       chartsPlaceholder.appendChild(chartsDiv);
     }
 
-    // Конвертируем в canvas
+    // Конвертируем в canvas (уменьшен scale для оптимизации размера)
     const canvas = await html2canvas(tempContainer, {
-      scale: 2,
+      scale: 1, // Уменьшено с 2 до 1 для меньшего размера файла
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff'
@@ -168,14 +168,15 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
 
     // Создаем PDF
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgData = canvas.toDataURL('image/png');
+    // Используем JPEG вместо PNG для меньшего размера файла
+    const imgData = canvas.toDataURL('image/jpeg', 0.85);
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    // Конвертируем размеры canvas из пикселей в мм (при scale=2)
-    const imgWidthMM = (canvas.width / 2) * 0.264583; // 96 DPI to mm
-    const imgHeightMM = (canvas.height / 2) * 0.264583;
+    // Конвертируем размеры canvas из пикселей в мм (при scale=1)
+    const imgWidthMM = canvas.width * 0.264583; // 96 DPI to mm
+    const imgHeightMM = canvas.height * 0.264583;
 
     // Масштабируем чтобы поместиться на странице с отступами
     const margin = 10; // 10mm отступы
