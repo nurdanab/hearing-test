@@ -36,11 +36,21 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
     let emailSent = false;
 
     const sendEmailAutomatically = async () => {
+      console.log('=== sendEmailAutomatically called ===');
+      console.log('Checking conditions:', {
+        hasUserCanvas: !!userCanvasRef.current,
+        hasNormalCanvas: !!normalCanvasRef.current,
+        hasEmail: !!userData?.email,
+        email: userData?.email,
+        emailSent
+      });
+
       // Проверяем что графики отрисованы и email еще не отправлен
       if (userCanvasRef.current && normalCanvasRef.current && userData?.email && !emailSent) {
         emailSent = true; // Предотвращаем повторную отправку
 
         try {
+          console.log('Starting email sending process...');
           const interpretation = getHearingInterpretation();
 
           // Вычисляем средние значения для email
@@ -61,6 +71,7 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
             : 0;
 
           // Генерируем PDF как base64
+          console.log('Generating PDF...');
           const pdfResult = await generatePDF(
             userData,
             testResults,
@@ -70,8 +81,15 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
             { returnBase64: true }
           );
 
+          console.log('PDF generation result:', {
+            success: pdfResult.success,
+            hasBase64: !!pdfResult.base64,
+            base64Length: pdfResult.base64?.length
+          });
+
           if (pdfResult.success && pdfResult.base64) {
             // Отправляем email с PDF
+            console.log('Sending email to:', userData.email);
             await sendResultsEmail({
               to: userData.email,
               name: userData.name,
@@ -84,10 +102,15 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
             });
 
             console.log('Results sent to email successfully');
+          } else {
+            console.error('PDF generation failed or no base64:', pdfResult);
           }
         } catch (error) {
           console.error('Error sending email:', error);
+          console.error('Error stack:', error.stack);
         }
+      } else {
+        console.log('Conditions not met for sending email');
       }
     };
 
