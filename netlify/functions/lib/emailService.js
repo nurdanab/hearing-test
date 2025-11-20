@@ -123,28 +123,32 @@ export async function sendTestResults({
 
     // Отправка письма пользователю
     const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent to user:', info.messageId);
 
     // Отправляем копию результатов на email клиники
-    // Делаем это асинхронно, чтобы не блокировать ответ пользователю
-    sendResultsCopyToClinic({
-      clientEmail: to,
-      name,
-      testResult,
-      averageDb,
-      leftEarDb,
-      rightEarDb,
-      description,
-      pdfBase64,
-      pdfFilename
-    }).then(result => {
-      if (result.success) {
-        console.log('Copy sent to clinic successfully:', result.messageId);
+    // Ожидаем завершения отправки
+    try {
+      const clinicResult = await sendResultsCopyToClinic({
+        clientEmail: to,
+        name,
+        testResult,
+        averageDb,
+        leftEarDb,
+        rightEarDb,
+        description,
+        pdfBase64,
+        pdfFilename
+      });
+
+      if (clinicResult.success) {
+        console.log('Copy sent to clinic successfully:', clinicResult.messageId);
       } else {
-        console.error('Failed to send copy to clinic:', result.error);
+        console.error('Failed to send copy to clinic:', clinicResult.error);
       }
-    }).catch(error => {
-      console.error('Error sending copy to clinic:', error);
-    });
+    } catch (clinicError) {
+      // Логируем ошибку, но не прерываем процесс
+      console.error('Error sending copy to clinic:', clinicError);
+    }
 
     return {
       success: true,
