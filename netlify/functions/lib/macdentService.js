@@ -73,6 +73,7 @@ export function formatAppointmentText(userData, surveyData, testResults, interpr
   // Email
   if (userData?.email) {
     lines.push(`${userData.email};`);
+    lines.push(''); // Пустая строка после email
   }
 
   // Результаты анкетирования (краткий формат)
@@ -86,6 +87,7 @@ export function formatAppointmentText(userData, surveyData, testResults, interpr
     if (surveyData[3]) {
       lines.push(`3-${surveyData[3]};`);
     }
+    lines.push(''); // Пустая строка после анкеты
   }
 
   // Результаты теста на слух (краткий формат)
