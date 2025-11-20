@@ -72,19 +72,19 @@ export function formatAppointmentText(userData, surveyData, testResults, interpr
 
   // Email
   if (userData?.email) {
-    lines.push(`Комментарии пациента: ${userData.email}`);
+    lines.push(`${userData.email};`);
   }
 
   // Результаты анкетирования (краткий формат)
   if (surveyData) {
     if (surveyData[1]) {
-      lines.push(`1-${surveyData[1]}`);
+      lines.push(`1-${surveyData[1]};`);
     }
     if (surveyData[2]) {
-      lines.push(`2-${surveyData[2]}`);
+      lines.push(`2-${surveyData[2]};`);
     }
     if (surveyData[3]) {
-      lines.push(`3-${surveyData[3]}`);
+      lines.push(`3-${surveyData[3]};`);
     }
   }
 
