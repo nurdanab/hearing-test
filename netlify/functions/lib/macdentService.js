@@ -59,6 +59,7 @@ export async function sendAppointmentToMacdent(appointmentData) {
 
 /**
  * Форматирует данные теста на слух в текстовый формат для поля text
+ * Краткий формат для CRM
  *
  * @param {Object} userData - Данные пользователя
  * @param {Object} surveyData - Результаты анкетирования
@@ -71,79 +72,38 @@ export function formatAppointmentText(userData, surveyData, testResults, interpr
 
   // Email
   if (userData?.email) {
-    lines.push(`Email: ${userData.email}`);
-    lines.push('');
+    lines.push(`Комментарии пациента: ${userData.email}`);
   }
 
-  // Результаты анкетирования
+  // Результаты анкетирования (краткий формат)
   if (surveyData) {
-    lines.push('=== Результаты анкетирования ===');
-
-    const questions = [
-      { id: 1, text: 'Как давно вы заметили ухудшение слуха?' },
-      { id: 2, text: 'Часто ли вы переспрашиваете?' },
-      { id: 3, text: 'Есть ли звон или шум в ушах?' }
-    ];
-
-    questions.forEach(q => {
-      if (surveyData[q.id]) {
-        lines.push(`${q.text}`);
-        lines.push(`Ответ: ${surveyData[q.id]}`);
-        lines.push('');
-      }
-    });
+    if (surveyData[1]) {
+      lines.push(`1-${surveyData[1]}`);
+    }
+    if (surveyData[2]) {
+      lines.push(`2-${surveyData[2]}`);
+    }
+    if (surveyData[3]) {
+      lines.push(`3-${surveyData[3]}`);
+    }
   }
 
-  // Результаты теста на слух
+  // Результаты теста на слух (краткий формат)
   if (testResults) {
-    lines.push('=== Результаты теста на слух ===');
-
-    // Левое ухо
-    if (testResults.left) {
-      lines.push('Левое ухо:');
-      Object.entries(testResults.left).forEach(([freq, db]) => {
-        lines.push(`  ${freq} Гц: ${db} дБ`);
-      });
-
-      const leftValues = Object.values(testResults.left);
-      const leftAvg = Math.round(leftValues.reduce((sum, val) => sum + val, 0) / leftValues.length);
-      lines.push(`  Средний порог: ${leftAvg} дБ`);
-      lines.push('');
-    }
-
-    // Правое ухо
-    if (testResults.right) {
-      lines.push('Правое ухо:');
-      Object.entries(testResults.right).forEach(([freq, db]) => {
-        lines.push(`  ${freq} Гц: ${db} дБ`);
-      });
-
-      const rightValues = Object.values(testResults.right);
-      const rightAvg = Math.round(rightValues.reduce((sum, val) => sum + val, 0) / rightValues.length);
-      lines.push(`  Средний порог: ${rightAvg} дБ`);
-      lines.push('');
-    }
-
-    // Общий результат
-    const allValues = [
-      ...Object.values(testResults.left || {}),
-      ...Object.values(testResults.right || {})
-    ];
+    const leftValues = Object.values(testResults.left || {});
+    const rightValues = Object.values(testResults.right || {});
+    const allValues = [...leftValues, ...rightValues];
 
     if (allValues.length > 0) {
       const overallAvg = Math.round(allValues.reduce((sum, val) => sum + val, 0) / allValues.length);
-      lines.push(`Общий средний порог: ${overallAvg} дБ`);
-      lines.push('');
-    }
-  }
+      const leftAvg = leftValues.length > 0
+        ? Math.round(leftValues.reduce((sum, val) => sum + val, 0) / leftValues.length)
+        : 0;
+      const rightAvg = rightValues.length > 0
+        ? Math.round(rightValues.reduce((sum, val) => sum + val, 0) / rightValues.length)
+        : 0;
 
-  // Интерпретация результатов
-  if (interpretation) {
-    lines.push('=== Результат ===');
-    lines.push(`Диагноз: ${interpretation.text}`);
-    if (interpretation.description) {
-      lines.push('');
-      lines.push(interpretation.description);
+      lines.push(`Результат - ${overallAvg}Дб; ${leftAvg}Дб(левое); ${rightAvg}Дб(правое)`);
     }
   }
 
