@@ -153,6 +153,7 @@ function App() {
         <Results
           testResults={testResults}
           userData={userData}
+          surveyData={surveyData}
           crmLeadId={crmLeadId}
           onBack={handleBackToHearingTest}
           onFinish={handleFinish}

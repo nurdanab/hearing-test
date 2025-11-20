@@ -24,6 +24,12 @@ netlify/functions/node_modules
 # Test files
 test-wordpress-iframe.html
 
+# Documentation
+MACDENT_INTEGRATION.md
+
+# Claude Code
+.claude
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

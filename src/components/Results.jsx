@@ -4,8 +4,9 @@ import { drawUserResults, drawNormalResults } from './audiogramHelpers';
 import { generatePDF } from '../utils/pdfGenerator';
 import { submitTestResultsToCRM } from '../services/crmApi';
 import { sendResultsEmail } from '../services/emailApi';
+import { sendToMacdent } from '../services/macdentApi';
 
-const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
+const Results = ({ testResults, onBack, onFinish, userData, surveyData, crmLeadId }) => {
   const userCanvasRef = useRef(null);
   const normalCanvasRef = useRef(null);
 
@@ -27,6 +28,25 @@ const Results = ({ testResults, onBack, onFinish, userData, crmLeadId }) => {
       const interpretation = getHearingInterpretation();
       submitTestResultsToCRM(crmLeadId, testResults, interpretation);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Отправляем данные в MacDent CRM при монтировании компонента
+  useEffect(() => {
+    const sendToMacdentCRM = async () => {
+      if (userData && testResults) {
+        const interpretation = getHearingInterpretation();
+
+        await sendToMacdent({
+          userData,
+          surveyData,
+          testResults,
+          interpretation
+        });
+      }
+    };
+
+    sendToMacdentCRM();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
 
