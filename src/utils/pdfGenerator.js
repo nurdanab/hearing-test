@@ -107,9 +107,12 @@ export const generatePDF = async (userData, testResults, interpretation, userCan
          
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; color: #333;">
             <div>
-              <p style="margin: 6px 0;"><strong>Адрес:</strong> г. Алматы ул.Желтоксан (бывш.Мира), 126, угол ул.Богенбай батыра
-              (бывш.Кирова), 136</p>
-              <p style="margin: 6px 0;"><strong>Email:</strong> euroluxsystema@mail.ru</p>
+              <p style="margin: 6px 0;"><strong>Адрес:</strong> г. Алматы, ул. Желтоксан 126<br>
+              г. Алматы, ул. Ауезова 118<br>
+              г. Астана, ул. А. Мамбетова 20<br>
+              г. Шымкент, ул. Туркестанская 2/4a
+              </p>
+              <p style="margin: 6px 0;"><strong>Email:</strong> domsluhaalmaty@gmail.com</p>
             </div>
             <div>
               <p style="margin: 6px 0;"><strong>Алматы:</strong> +7 707 215 72 21</p>
